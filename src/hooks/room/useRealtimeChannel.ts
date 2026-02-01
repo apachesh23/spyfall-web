@@ -1,3 +1,8 @@
+// /hooks/room/useRealtimeChannel.ts - ФИНАЛЬНАЯ ВЕРСИЯ
+// PostgreSQL Changes вместо Broadcast для state
+
+'use client';
+
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
@@ -8,6 +13,7 @@ type Player = {
   avatar: string;
   is_host: boolean;
   room_id: string;
+  joined_at: string;
 };
 
 type UseRealtimeProps = {
@@ -33,75 +39,149 @@ export function useRealtimeChannel({
   useEffect(() => {
     if (!roomId || !playerId) return;
 
-    const channel = supabase
-      .channel(`room-${roomId}`, {
-        config: {
-          presence: {
-            key: playerId
-          }
+    console.log('🔌 Subscribing to realtime for room:', roomId);
+
+    const channel = supabase.channel(`room-${roomId}`, {
+      config: {
+        presence: {
+          key: playerId
         }
-      })
-      .on('broadcast', { event: 'player_joined' }, (payload) => {
-        console.log('🎉 Player joined!', payload);
+      }
+    });
+
+    // ============================================
+    // POSTGRES_CHANGES - Источник истины для STATE
+    // ============================================
+
+    // 1. PLAYERS - INSERT (новый игрок присоединился)
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'players',
+        filter: `room_id=eq.${roomId}`
+      },
+      (payload) => {
+        console.log('➕ Player joined:', payload.new);
+        
+        const newPlayer = payload.new as Player;
+        
         setPlayers((prev) => {
-          if (prev.some(p => p.id === payload.payload.id)) return prev;
-          return [...prev, payload.payload];
+          // Проверяем дубликат
+          if (prev.some(p => p.id === newPlayer.id)) {
+            return prev;
+          }
+          
+          // Добавляем и сортируем по joined_at
+          const updated = [...prev, newPlayer];
+          return updated.sort((a, b) => 
+            new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
+          );
         });
-      })
-      .on('broadcast', { event: 'player_kicked' }, (payload) => {
-        console.log('👢 Player kicked:', payload);
+      }
+    );
+
+    // 2. PLAYERS - DELETE (игрок кикнут или вышел)
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'players',
+        filter: `room_id=eq.${roomId}`
+      },
+      (payload) => {
+        console.log('➖ Player left:', payload.old);
         
-        const kickedId = payload.payload.playerId;
-        const myPlayerId = localStorage.getItem(`player_${code}`);
+        const deletedId = payload.old.id;
         
-        if (kickedId === myPlayerId) {
-          alert('Вас кикнул ведущий');
+        // Если удалили меня - редирект
+        if (deletedId === playerId) {
+          console.log('🚪 You were kicked, redirecting...');
           localStorage.removeItem(`player_${code}`);
           router.push(`/invite/${code}`);
           return;
         }
         
-        setPlayers((prev) => prev.filter(p => p.id !== kickedId));
-      })
-      .on('broadcast', { event: 'settings_updated' }, (payload) => {
-        console.log('⚙️ Settings updated:', payload);
-        setSettings(payload.payload);
-      })
-      .on('broadcast', { event: 'game_started' }, (payload) => {
-        console.log('🎮 Game started!', payload);
-        router.push(`/game/${code}`);
-      })
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const online = new Set<string>();
-        Object.keys(state).forEach(key => {
-          online.add(key);
-        });
-        setOnlinePlayers(online);
-      })
-      .on('presence', { event: 'join' }, ({ key }) => {
-        setOnlinePlayers((prev) => new Set([...prev, key]));
-      })
-      .on('presence', { event: 'leave' }, ({ key }) => {
-        setOnlinePlayers((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(key);
-          return newSet;
-        });
-      })
-      .subscribe(async (status) => {
-        console.log('📡 Status:', status);
-        if (status === 'SUBSCRIBED' && playerId) {
-          await channel.track({
-            player_id: playerId,
-            online_at: new Date().toISOString()
-          });
+        // Убираем игрока из списка
+        setPlayers((prev) => prev.filter(p => p.id !== deletedId));
+      }
+    );
+
+    // 3. ROOMS - UPDATE (настройки или статус изменились)
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'rooms',
+        filter: `id=eq.${roomId}`
+      },
+      (payload) => {
+        console.log('🔄 Room updated');
+        
+        const newRoom = payload.new;
+        const oldRoom = payload.old;
+
+        // Обновились настройки
+        if (JSON.stringify(newRoom.settings) !== JSON.stringify(oldRoom.settings)) {
+          console.log('⚙️ Settings changed');
+          setSettings(newRoom.settings);
         }
+
+        // Игра началась!
+        if (newRoom.status === 'playing' && oldRoom.status !== 'playing') {
+          console.log('🎮 Game started, redirecting to game');
+          router.push(`/game/${code}`);
+        }
+      }
+    );
+
+    // ============================================
+    // PRESENCE - Только для online статуса (не критично)
+    // ============================================
+
+    channel.on('presence', { event: 'sync' }, () => {
+      const state = channel.presenceState();
+      const online = new Set<string>();
+      Object.keys(state).forEach(key => {
+        online.add(key);
       });
+      setOnlinePlayers(online);
+    });
+
+    channel.on('presence', { event: 'join' }, ({ key }) => {
+      setOnlinePlayers((prev) => new Set([...prev, key]));
+    });
+
+    channel.on('presence', { event: 'leave' }, ({ key }) => {
+      setOnlinePlayers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+    });
+
+    // ============================================
+    // SUBSCRIBE
+    // ============================================
+
+    channel.subscribe(async (status) => {
+      console.log('📡 Realtime status:', status);
+      
+      if (status === 'SUBSCRIBED' && playerId) {
+        await channel.track({
+          player_id: playerId,
+          online_at: new Date().toISOString()
+        });
+      }
+    });
 
     channelRef.current = channel;
 
     return () => {
+      console.log('🔌 Unsubscribing from realtime');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }

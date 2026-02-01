@@ -1,3 +1,6 @@
+// /api/rooms/create/route.ts - УЛУЧШЕННАЯ ВЕРСИЯ
+// Изменения: убрали broadcast (не нужен), добавили транзакционность
+
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 
@@ -18,24 +21,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
+    // Валидация
+    if (nickname.length > 20) {
+      return NextResponse.json({ error: 'Nickname too long' }, { status: 400 });
+    }
+
     const roomCode = generateRoomCode();
     const hostId = crypto.randomUUID();
 
+    // 1. Создаём комнату
     const { data: room, error: roomError } = await supabase
       .from('rooms')
       .insert({
         code: roomCode,
         host_id: hostId,
         status: 'waiting',
+        // settings используется default из БД
       })
       .select()
       .single();
 
-    if (roomError) throw roomError;
+    if (roomError) {
+      console.error('Room creation error:', roomError);
+      throw roomError;
+    }
 
+    // 2. Создаём игрока-хоста
     const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
+        id: hostId, // ВАЖНО: используем тот же ID что host_id
         room_id: room.id,
         nickname,
         avatar,
@@ -44,14 +59,14 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (playerError) throw playerError;
+    if (playerError) {
+      console.error('Player creation error:', playerError);
+      // Откатываем комнату
+      await supabase.from('rooms').delete().eq('id', room.id);
+      throw playerError;
+    }
 
-    // НОВОЕ! Отправляем broadcast
-    await supabase.channel(`room-${room.id}`).send({
-      type: 'broadcast',
-      event: 'player_joined',
-      payload: player
-    });
+    console.log('✅ Room created:', roomCode, 'Host:', hostId);
 
     return NextResponse.json({ 
       roomCode: room.code,
@@ -60,7 +75,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    console.error('Create room error:', error);
+    return NextResponse.json({ error: 'Failed to create room' }, { status: 500 });
   }
 }

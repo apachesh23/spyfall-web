@@ -104,45 +104,97 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     console.log('🏁 Calling finish API...');
     
     try {
-      // ДОБАВЛЕНО: AbortController для отмены запроса при размонтировании
       const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 сек timeout
       
       const response = await fetch('/api/game/vote/finish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId }),
-        signal: controller.signal, // ← Добавили
+        signal: controller.signal,
       });
+  
+      clearTimeout(timeoutId);
   
       if (!response.ok) {
         const data = await response.json();
         console.error('Finish error:', data.error);
+        throw new Error(data.error || 'Failed to finish voting');
       }
+      
+      console.log('✅ Finish API call successful');
+      
     } catch (err) {
-      // Игнорируем ошибки AbortError (когда компонент размонтирован)
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log('Finish request cancelled');
+        console.log('⏰ Finish request timeout - trying fallback');
       } else {
-        console.error(err);
+        console.error('❌ Finish voting error:', err);
       }
+      
+      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если ошибка - закрываем модал принудительно
+      // чтобы не зависнуть навсегда
+      console.log('🔄 Forcing modal close due to error');
+      setIsVotingOpen(false);
+      
     } finally {
+      // ИСПРАВЛЕНО: Быстрее сбрасываем флаг (500мс вместо 2000мс)
       setTimeout(() => {
         finishingRef.current = false;
-      }, 2000);
+        console.log('🔓 Finish lock released');
+      }, 500);
     }
   }, [roomId]);
 
+  const handleVotingTimeExpired = useCallback(async () => {
+    console.log('⏰ Voting time expired!');
+    
+    // Пытаемся завершить голосование через API
+    await finishVoting();
+    
+    // НОВОЕ: Если через 3 секунды модал все еще открыт - закрываем принудительно
+    setTimeout(() => {
+      if (isVotingOpen) {
+        console.warn('⚠️ Forcing modal close after timeout - API might have failed');
+        setIsVotingOpen(false);
+        setVotedPlayers(new Set());
+        setMyVote(null);
+        finishingRef.current = false; // Сбрасываем флаг принудительно
+      }
+    }, 3000);
+  }, [finishVoting, isVotingOpen]);
+
+  // Изменить handleAllVotesCollected
   const handleAllVotesCollected = useCallback(() => {
-    console.log('🎯 All votes collected! Finishing now...');
-    finishVoting();
-  }, [finishVoting]);
+    console.log('🎯 All votes collected!');
+    
+    if (!isVotingOpen) {
+      console.warn('⚠️ Voting modal already closed');
+      return;
+    }
+    
+    if (isHost) {
+      console.log('🎖️ I am host, finishing voting immediately');
+      finishVoting();
+    } else {
+      console.log('⏳ Waiting for host... will retry in 3s if needed');
+      
+      // Fallback: если через 3 секунды модал все еще открыт - попробуем сами
+      setTimeout(() => {
+        if (isVotingOpen && !finishingRef.current) {
+          console.log('⚠️ Host did not finish, taking over as backup');
+          finishVoting();
+        }
+      }, 3000);
+    }
+  }, [finishVoting, isVotingOpen, isHost]);
 
   const handleVotingFinished = useCallback((data: { result: any }) => {
     console.log('🏁 Voting finished!', data);
     
+    finishingRef.current = false;
+    
     const { result } = data;
     setVotingResult(result);
-    
     setIsVotingOpen(false);
     
     if (result.type === 'tie_revote') {
@@ -152,8 +204,24 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
       
       setTimeout(() => {
         setShowIntermediateResult(false);
-        startRevoting();
-      }, 3000);
+        
+        console.log('🔄 Opening revote modal');
+        setIsVotingOpen(true);
+        setVotingEndsAt(result.revoteEndsAt);
+        
+        // Сбрасываем голоса от первого раунда
+        setVotedPlayers(new Set());
+        setMyVote(null);
+        
+        // Автоголоса кандидатов УЖЕ созданы на сервере
+        // vote_cast events придут автоматически и обновят:
+        // - votedPlayers (добавят кандидатов)
+        // - myVote (если я кандидат)
+        
+        // УДАЛЕНО: клиентское автоголосование
+        // Теперь голоса создаются на сервере при старте revote
+        
+      }, 5000);
       
     } else if (result.type === 'tie_failed' || (result.type === 'eliminated' && !result.isFinal)) {
       setShowIntermediateResult(true);
@@ -161,27 +229,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     } else if (result.type === 'eliminated' && result.isFinal) {
       setShowFinalResult(true);
     }
-  }, []);
-
-  const startRevoting = useCallback(async () => {
-    if (!roomId) return;
-
-    console.log('🔄 Starting revote...');
-
-    try {
-      const response = await fetch('/api/game/early-vote/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, playerId: currentPlayerId }),
-      });
-
-      if (!response.ok) {
-        console.error('Revote start failed');
-      }
-    } catch (err) {
-      console.error('Revote start error:', err);
-    }
-  }, [roomId, currentPlayerId]);
+  }, []); // ВАЖНО: пустой массив deps (не нужны currentPlayerId и castVote)
 
   const handleGameEnded = useCallback((roomCode: string) => {
     console.log('🏁 Game ended! Redirecting to room...');
@@ -215,11 +263,15 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const handleIntermediateResultClose = useCallback(() => {
     console.log('Closing intermediate result');
     setShowIntermediateResult(false);
-    setVotingResult(null);
-    setRevoteCandidates([]);
-    setWantsEarlyVote(false);
-    setEarlyVoteCount(0);
-  }, []);
+    
+    // ИСПРАВЛЕНО: Не сбрасываем revoteCandidates при tie_revote
+    if (votingResult?.type !== 'tie_revote') {
+      setVotingResult(null);
+      setRevoteCandidates([]);
+      setWantsEarlyVote(false);
+      setEarlyVoteCount(0);
+    }
+  }, [votingResult]);
 
   async function endGame() {
     if (!roomId || !currentPlayerId) return;
@@ -379,7 +431,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
           </div>
         )}
   
-        {isAlive && votingEndsAt && (
+          {isAlive && votingEndsAt && (
           <VotingModal
             isOpen={isVotingOpen}
             players={players}
@@ -388,7 +440,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
             endsAt={votingEndsAt}
             onVote={castVote}
             myVote={myVote}
-            onTimeExpired={finishVoting}
+            onTimeExpired={handleVotingTimeExpired} // ← ИЗМЕНЕНО: используем новый обработчик
             revoteCandidates={revoteCandidates}
           />
         )}

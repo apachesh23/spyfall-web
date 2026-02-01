@@ -1,3 +1,6 @@
+// /api/rooms/settings/route.ts - УЛУЧШЕННАЯ ВЕРСИЯ
+// Изменения: убрали broadcast, добавили версионирование
+
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 
@@ -5,96 +8,66 @@ export async function POST(request: Request) {
   try {
     const { roomId, hostId, settings } = await request.json();
 
-    console.log('Update settings:', { roomId, hostId, settings });
-
     if (!roomId || !hostId || !settings) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
-    // Проверяем что обновляет ведущий
-    const { data: host } = await supabase
-      .from('players')
-      .select('is_host')
-      .eq('id', hostId)
-      .eq('room_id', roomId)
+    // 1. Проверяем что это хост
+    const { data: room } = await supabase
+      .from('rooms')
+      .select('host_id, status')
+      .eq('id', roomId)
       .single();
 
-    if (!host?.is_host) {
-      return NextResponse.json({ error: 'Только ведущий может менять настройки' }, { status: 403 });
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    // Валидация
-    const validated = validateSettings(settings);
-    if (!validated.valid) {
-      return NextResponse.json({ error: validated.error }, { status: 400 });
+    if (room.host_id !== hostId) {
+      return NextResponse.json({ error: 'Only host can change settings' }, { status: 403 });
     }
 
-    // Обновляем настройки
-    const { error: updateError } = await supabase
+    if (room.status !== 'waiting') {
+      return NextResponse.json({ error: 'Cannot change settings during game' }, { status: 400 });
+    }
+
+    // 2. Валидация настроек
+    const validatedSettings = {
+      spy_count: Math.max(1, Math.min(settings.spy_count || 1, 3)),
+      game_duration: Math.max(5, Math.min(settings.game_duration || 15, 30)),
+      vote_duration: Math.max(1, Math.min(settings.vote_duration || 1, 5)),
+      mode_roles: !!settings.mode_roles,
+      mode_theme: !!settings.mode_theme,
+      mode_spy_chaos: !!settings.mode_spy_chaos,
+      mode_hidden_threat: !!settings.mode_hidden_threat,
+      mode_shadow_alliance: !!settings.mode_shadow_alliance,
+    };
+
+    // 3. Обновляем настройки + updated_at для версионирования
+    const { data: updatedRoom, error: updateError } = await supabase
       .from('rooms')
-      .update({ settings: validated.settings })
-      .eq('id', roomId);
+      .update({
+        settings: validatedSettings,
+        updated_at: new Date().toISOString(), // ← ВАЖНО для версионирования
+      })
+      .eq('id', roomId)
+      .select('settings')
+      .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('Settings update error:', updateError);
+      throw updateError;
+    }
 
-    // Broadcast всем игрокам
-    const channel = supabase.channel(`room-${roomId}`);
-    await new Promise((resolve) => {
-      channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') resolve(true);
-      });
+    console.log('✅ Settings updated for room:', roomId);
+
+    return NextResponse.json({ 
+      success: true,
+      settings: updatedRoom.settings
     });
-
-    await channel.send({
-      type: 'broadcast',
-      event: 'settings_updated',
-      payload: validated.settings
-    });
-
-    await supabase.removeChannel(channel);
-
-    return NextResponse.json({ success: true, settings: validated.settings });
 
   } catch (error) {
-    console.error('Settings error:', error);
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    console.error('Settings update error:', error);
+    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
-}
-
-function validateSettings(settings: any) {
-  const s = {
-    game_duration: Number(settings.game_duration) || 15,
-    vote_duration: Number(settings.vote_duration) || 1,
-    spy_count: Number(settings.spy_count) || 1,
-    mode_roles: Boolean(settings.mode_roles),
-    mode_theme: Boolean(settings.mode_theme),
-    mode_hidden_threat: Boolean(settings.mode_hidden_threat),
-    mode_shadow_alliance: Boolean(settings.mode_shadow_alliance),
-    mode_spy_chaos: Boolean(settings.mode_spy_chaos),
-  };
-
-  // Валидация
-  if (s.game_duration < 1 || s.game_duration > 60) {
-    return { valid: false, error: 'Время игры: 1-60 минут' };
-  }
-
-  if (s.vote_duration < 0.5 || s.vote_duration > 5) {
-    return { valid: false, error: 'Время голосования: 0.5-5 минут' };
-  }
-
-  if (s.spy_count < 1 || s.spy_count > 10) {
-    return { valid: false, error: 'Шпионов: 1-10' };
-  }
-
-  // Режим "Шпионский хаос" отключает ручной выбор кол-ва шпионов
-  if (s.mode_spy_chaos) {
-    s.spy_count = 1; // Игнорируем, будет рандом
-  }
-
-  // Режим "Союз теней" работает только если шпионов > 1
-  if (s.mode_shadow_alliance && s.spy_count < 2 && !s.mode_spy_chaos) {
-    return { valid: false, error: '"Союз теней" требует минимум 2 шпионов' };
-  }
-
-  return { valid: true, settings: s };
 }

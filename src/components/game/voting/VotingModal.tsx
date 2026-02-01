@@ -66,6 +66,10 @@ export function VotingModal({
   // Если есть revoteCandidates - показываем только их (повторное голосование)
   // Если нет - показываем всех живых (обычное голосование)
   const isRevote = revoteCandidates.length > 0;
+  
+  // НОВОЕ: Проверяем является ли текущий игрок кандидатом
+  const isCandidate = isRevote && currentPlayerId && revoteCandidates.includes(currentPlayerId);
+  
   const displayPlayers = isRevote
     ? players.filter(p => revoteCandidates.includes(p.id))
     : players.filter(p => p.is_alive);
@@ -100,7 +104,8 @@ export function VotingModal({
           {isRevote ? '🔄 Повторное голосование' : '🗳️ Голосование'}
         </h2>
 
-        {isRevote && (
+        {/* Информация для обычных игроков в revote */}
+        {isRevote && !isCandidate && (
           <p style={{ 
             background: '#fff3e0', 
             padding: '10px', 
@@ -109,6 +114,22 @@ export function VotingModal({
             marginBottom: '15px'
           }}>
             ⚠️ Была ничья! Выбор только между лидерами.
+          </p>
+        )}
+
+        {/* НОВОЕ: Информация для кандидатов */}
+        {isRevote && isCandidate && (
+          <p style={{ 
+            background: '#e3f2fd', 
+            padding: '15px', 
+            borderRadius: '8px',
+            fontSize: '14px',
+            marginBottom: '15px',
+            border: '2px solid #2196f3'
+          }}>
+            🎯 <strong>Ты в повторном голосовании!</strong><br/>
+            Твой голос автоматически засчитан против оппонента.<br/>
+            Ожидай решения других игроков...
           </p>
         )}
         
@@ -138,6 +159,26 @@ export function VotingModal({
             <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
               Ожидаем остальных игроков или окончания таймера...
             </p>
+            
+            {/* НОВОЕ: Прогресс голосования */}
+            <div style={{ marginTop: '15px' }}>
+              <div style={{ fontSize: '14px', marginBottom: '5px' }}>
+                Проголосовало: {votedPlayers.size} / {players.filter(p => p.is_alive).length}
+              </div>
+              <div style={{ 
+                background: '#ddd', 
+                height: '8px', 
+                borderRadius: '4px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  background: '#4caf50',
+                  height: '100%',
+                  width: `${(votedPlayers.size / players.filter(p => p.is_alive).length) * 100}%`,
+                  transition: 'width 0.3s'
+                }} />
+              </div>
+            </div>
           </div>
         ) : (
           <>
@@ -159,21 +200,19 @@ export function VotingModal({
                       borderRadius: '8px',
                       cursor: isDisabled ? 'not-allowed' : 'pointer',
                       background: isSelected ? '#e3f2fd' : isDisabled ? '#f5f5f5' : 'white',
-                      opacity: isDisabled ? 0.6 : 1,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                      opacity: isDisabled ? 0.5 : 1,
                     }}
                   >
-                    <span style={{ fontSize: '18px' }}>
-                      {player.avatar} {player.nickname}
-                      {isMe && ' (ты)'}
-                    </span>
-                    <span style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>{player.avatar}</span>
+                      <span style={{ fontSize: '16px' }}>
+                        {player.nickname}
+                        {isMe && ' (Ты)'}
+                      </span>
                       {votedPlayers.has(player.id) && (
-                        <span style={{ color: 'green', fontSize: '14px' }}>✓</span>
+                        <span style={{ marginLeft: 'auto', color: 'green' }}>✓</span>
                       )}
-                    </span>
+                    </div>
                   </div>
                 );
               })}
@@ -186,27 +225,18 @@ export function VotingModal({
                 width: '100%',
                 padding: '15px',
                 fontSize: '18px',
-                background: selectedPlayer ? 'blue' : '#ccc',
+                fontWeight: 'bold',
+                background: selectedPlayer ? '#2196f3' : '#ccc',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: selectedPlayer ? 'pointer' : 'not-allowed',
               }}
             >
-              Проголосовать
+              Голосовать
             </button>
           </>
         )}
-
-        <div style={{
-          marginTop: '20px',
-          padding: '10px',
-          background: '#f5f5f5',
-          borderRadius: '8px',
-          fontSize: '14px',
-        }}>
-          Проголосовало: {votedPlayers.size} / {displayPlayers.length}
-        </div>
       </div>
     </div>
   );

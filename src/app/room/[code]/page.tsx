@@ -114,7 +114,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       
       <InviteLink code={code} />
 
-      {isHost && (
+      {isHost && settings && (
         <RoomSettings 
           settings={settings}
           onSettingsChange={setSettings}

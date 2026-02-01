@@ -1,3 +1,6 @@
+// /api/rooms/join/route.ts - УЛУЧШЕННАЯ ВЕРСИЯ
+// Изменения: убрали broadcast, добавили больше проверок
+
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 
@@ -9,9 +12,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
+    // Валидация
+    if (nickname.length > 20) {
+      return NextResponse.json({ error: 'Nickname too long' }, { status: 400 });
+    }
+
+    // 1. Находим комнату
     const { data: room, error: roomError } = await supabase
       .from('rooms')
-      .select('id, status')
+      .select('id, status, settings')
       .eq('code', roomCode)
       .single();
 
@@ -19,21 +28,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Комната не найдена' }, { status: 404 });
     }
 
+    // 2. Проверяем статус
     if (room.status !== 'waiting') {
       return NextResponse.json({ error: 'Игра уже началась' }, { status: 400 });
     }
 
+    // 3. Проверяем лимит игроков (если есть max_players)
+    const { count: playerCount } = await supabase
+      .from('players')
+      .select('id', { count: 'exact', head: true })
+      .eq('room_id', room.id);
+
+    const maxPlayers = room.settings?.max_players || 8;
+    if (playerCount && playerCount >= maxPlayers) {
+      return NextResponse.json({ error: 'Комната заполнена' }, { status: 400 });
+    }
+
+    // 4. Проверяем уникальность ника
     const { data: existingPlayer } = await supabase
       .from('players')
       .select('id')
       .eq('room_id', room.id)
       .eq('nickname', nickname)
-      .single();
+      .maybeSingle(); // ← используем maybeSingle вместо single
 
     if (existingPlayer) {
-      return NextResponse.json({ error: 'Ник занят' }, { status: 400 });
+      return NextResponse.json({ error: 'Ник занят в этой комнате' }, { status: 400 });
     }
 
+    // 5. Создаём игрока
     const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
@@ -45,23 +68,22 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (playerError) throw playerError;
+    if (playerError) {
+      console.error('Player creation error:', playerError);
+      throw playerError;
+    }
 
-    // НОВОЕ! Отправляем broadcast
-    await supabase.channel(`room-${room.id}`).send({
-      type: 'broadcast',
-      event: 'player_joined',
-      payload: player
-    });
+    console.log('✅ Player joined:', player.nickname, 'to room:', roomCode);
 
     return NextResponse.json({ 
       success: true,
       roomCode,
+      roomId: room.id,
       playerId: player.id
     });
 
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    console.error('Join room error:', error);
+    return NextResponse.json({ error: 'Failed to join room' }, { status: 500 });
   }
 }

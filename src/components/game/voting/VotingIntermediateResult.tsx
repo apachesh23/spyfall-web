@@ -1,3 +1,6 @@
+// ИСПРАВЛЕННАЯ ВЕРСИЯ VotingIntermediateResult.tsx
+// Исправлено: setState в render warning
+
 import { useState, useEffect } from 'react';
 
 type Player = {
@@ -39,7 +42,7 @@ export function VotingIntermediateResult({
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(interval);
-          onClose();
+          // НЕ вызываем onClose здесь - вызовем в отдельном useEffect
           return 0;
         }
         return prev - 1;
@@ -47,7 +50,20 @@ export function VotingIntermediateResult({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, onClose, countdownSeconds]);
+  }, [isOpen, countdownSeconds]); // убрали onClose из deps
+
+  // ИСПРАВЛЕНИЕ: Вызываем onClose в отдельном useEffect
+  useEffect(() => {
+    if (isOpen && countdown === 0) {
+      // Используем setTimeout чтобы вызвать после текущего рендера
+      const timer = setTimeout(() => {
+        console.log('Closing intermediate result');
+        onClose();
+      }, 0);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [countdown, isOpen, onClose]);
 
   if (!isOpen) return null;
 
