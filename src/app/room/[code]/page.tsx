@@ -1,3 +1,7 @@
+// /app/room/[code]/page.tsx
+// Lobby (ожидание игроков)
+// Использует обновлённый PlayerList
+
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +10,7 @@ import { useRoomData } from '@/hooks/room/useRoomData';
 import { useRealtimeChannel } from '@/hooks/room/useRealtimeChannel';
 import { InviteLink } from '@/components/room/InviteLink';
 import { RoomSettings } from '@/components/room/RoomSettings';
-import { PlayerList } from '@/components/room/PlayerList';
+import { PlayerList } from '@/components/player/PlayerList';
 import { StartGameButton } from '@/components/room/StartGameButton';
 
 export default function RoomPage({ params }: { params: Promise<{ code: string }> }) {
@@ -25,7 +29,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   } = useRoomData(code);
 
   const [onlinePlayers, setOnlinePlayers] = useState<Set<string>>(new Set());
-  const [kicking, setKicking] = useState<string | null>(null);
+  const [kickingPlayerId, setKickingPlayerId] = useState<string | null>(null);
   const [startingGame, setStartingGame] = useState(false);
 
   useRealtimeChannel({
@@ -40,13 +44,14 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   async function kickPlayer(playerId: string) {
     if (!roomId || !currentPlayerId || !confirm('Кикнуть игрока?')) return;
     
-    setKicking(playerId);
+    setKickingPlayerId(playerId);
     try {
       const response = await fetch('/api/rooms/kick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId, roomId, kickerId: currentPlayerId }),
       });
+      
       if (!response.ok) {
         const data = await response.json();
         alert(data.error || 'Ошибка');
@@ -55,7 +60,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       console.error(err);
       alert('Ошибка');
     } finally {
-      setKicking(null);
+      setKickingPlayerId(null);
     }
   }
 
@@ -68,6 +73,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId, hostId: currentPlayerId, settings }),
       });
+      
       const data = await response.json();
       if (!response.ok) {
         alert(data.error || 'Ошибка');
@@ -80,12 +86,12 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   async function startGame() {
     if (!roomId || !currentPlayerId) return;
+    
     if (players.length < 3) {
       alert('Минимум 3 игрока для старта!');
       return;
     }
-    if (!confirm(`Запустить игру с ${players.length} игроками?`)) return;
-    
+
     setStartingGame(true);
     try {
       const response = await fetch('/api/game/start', {
@@ -93,51 +99,101 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId, hostId: currentPlayerId }),
       });
+
       const data = await response.json();
       if (!response.ok) {
         alert(data.error || 'Ошибка старта игры');
         setStartingGame(false);
       }
+      // postgres_changes сделает редирект на /game
     } catch (err) {
       console.error(err);
-      alert('Ошибка');
+      alert('Ошибка старта игры');
       setStartingGame(false);
     }
   }
 
-  if (loading) return <div>Загрузка...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <h2 className="text-lg font-semibold text-red-900 mb-2">Ошибка</h2>
+          <p className="text-red-700">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1>Комната: {code}</h1>
-      
-      <InviteLink code={code} />
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Заголовок */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            🕵️ Лобби игры
+          </h1>
+          <InviteLink code={code} />
+        </div>
 
-      {isHost && settings && (
-        <RoomSettings 
-          settings={settings}
-          onSettingsChange={setSettings}
-          onSave={saveSettings}
-        />
-      )}
+        {/* Основной контент */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Левая колонка - Игроки */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <PlayerList 
+              players={players}
+              currentPlayerId={currentPlayerId}
+              onlinePlayers={onlinePlayers}
+              isHost={isHost}
+              onKick={kickPlayer}
+              kickingPlayerId={kickingPlayerId}
+            />
+          </div>
 
-      <PlayerList
-        players={players}
-        currentPlayerId={currentPlayerId}
-        onlinePlayers={onlinePlayers}
-        isHost={isHost}
-        onKick={kickPlayer}
-        kicking={kicking}
-      />
+          {/* Правая колонка - Настройки */}
+          <div className="space-y-6">
+            {isHost && settings && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <RoomSettings
+                  settings={settings}
+                  onSettingsChange={setSettings}
+                  onSave={saveSettings}
+                />
+              </div>
+            )}
 
-      {isHost && (
-        <StartGameButton
-          playerCount={players.length}
-          onStart={startGame}
-          starting={startingGame}
-        />
-      )}
+            {/* Кнопка старта */}
+            {isHost && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <StartGameButton
+                  playerCount={players.length}
+                  onStart={startGame}
+                  starting={startingGame}
+                />
+              </div>
+            )}
+
+            {/* Информация для не-хостов */}
+            {!isHost && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <p className="text-sm text-gray-700 text-center">
+                  Ожидаем пока ведущий запустит игру...
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

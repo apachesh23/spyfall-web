@@ -1,20 +1,25 @@
-// /api/rooms/join/route.ts - УЛУЧШЕННАЯ ВЕРСИЯ
-// Изменения: убрали broadcast, добавили больше проверок
+// /api/rooms/join/route.ts - ОБНОВЛЕНО для avatar_id
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
+import { isValidAvatarId, DEFAULT_AVATAR_ID } from '@/lib/avatars';
 
 export async function POST(request: Request) {
   try {
-    const { roomCode, nickname, avatar } = await request.json();
+    const { roomCode, nickname, avatarId } = await request.json(); // ← ИЗМЕНЕНО
 
-    if (!roomCode || !nickname || !avatar) {
+    if (!roomCode || !nickname || avatarId === undefined) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
     // Валидация
     if (nickname.length > 20) {
       return NextResponse.json({ error: 'Nickname too long' }, { status: 400 });
+    }
+
+    // Валидация avatar_id
+    if (!isValidAvatarId(avatarId)) {
+      console.warn('Invalid avatar_id:', avatarId, '- using default');
     }
 
     // 1. Находим комнату
@@ -33,7 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Игра уже началась' }, { status: 400 });
     }
 
-    // 3. Проверяем лимит игроков (если есть max_players)
+    // 3. Проверяем лимит игроков
     const { count: playerCount } = await supabase
       .from('players')
       .select('id', { count: 'exact', head: true })
@@ -50,7 +55,7 @@ export async function POST(request: Request) {
       .select('id')
       .eq('room_id', room.id)
       .eq('nickname', nickname)
-      .maybeSingle(); // ← используем maybeSingle вместо single
+      .maybeSingle();
 
     if (existingPlayer) {
       return NextResponse.json({ error: 'Ник занят в этой комнате' }, { status: 400 });
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
       .insert({
         room_id: room.id,
         nickname,
-        avatar,
+        avatar_id: isValidAvatarId(avatarId) ? avatarId : DEFAULT_AVATAR_ID, // ← ИЗМЕНЕНО
         is_host: false,
       })
       .select()

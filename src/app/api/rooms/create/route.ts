@@ -1,8 +1,8 @@
-// /api/rooms/create/route.ts - УЛУЧШЕННАЯ ВЕРСИЯ
-// Изменения: убрали broadcast (не нужен), добавили транзакционность
+// /api/rooms/create/route.ts - ОБНОВЛЕНО для avatar_id
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
+import { isValidAvatarId, DEFAULT_AVATAR_ID } from '@/lib/avatars';
 
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -15,15 +15,22 @@ function generateRoomCode(): string {
 
 export async function POST(request: Request) {
   try {
-    const { nickname, avatar } = await request.json();
+    const { nickname, avatarId } = await request.json(); // ← ИЗМЕНЕНО: avatar → avatarId
 
-    if (!nickname || !avatar) {
+    if (!nickname || avatarId === undefined) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
 
     // Валидация
     if (nickname.length > 20) {
       return NextResponse.json({ error: 'Nickname too long' }, { status: 400 });
+    }
+
+    // Валидация avatar_id
+    if (!isValidAvatarId(avatarId)) {
+      console.warn('Invalid avatar_id:', avatarId, '- using default');
+      // Можно либо вернуть ошибку, либо использовать default
+      // return NextResponse.json({ error: 'Invalid avatar' }, { status: 400 });
     }
 
     const roomCode = generateRoomCode();
@@ -36,7 +43,6 @@ export async function POST(request: Request) {
         code: roomCode,
         host_id: hostId,
         status: 'waiting',
-        // settings используется default из БД
       })
       .select()
       .single();
@@ -50,10 +56,10 @@ export async function POST(request: Request) {
     const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
-        id: hostId, // ВАЖНО: используем тот же ID что host_id
+        id: hostId,
         room_id: room.id,
         nickname,
-        avatar,
+        avatar_id: isValidAvatarId(avatarId) ? avatarId : DEFAULT_AVATAR_ID, // ← ИЗМЕНЕНО
         is_host: true,
       })
       .select()

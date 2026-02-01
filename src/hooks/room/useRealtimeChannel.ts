@@ -1,20 +1,11 @@
-// /hooks/room/useRealtimeChannel.ts - ФИНАЛЬНАЯ ВЕРСИЯ
-// PostgreSQL Changes вместо Broadcast для state
-
+// src/hooks/room/useRealtimeChannel.ts - ИСПРАВЛЕНО для avatar_id
 'use client';
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-
-type Player = {
-  id: string;
-  nickname: string;
-  avatar: string;
-  is_host: boolean;
-  room_id: string;
-  joined_at: string;
-};
+import type { Player } from '@/types/player';
+import { isValidAvatarId, DEFAULT_AVATAR_ID } from '@/lib/avatars';
 
 type UseRealtimeProps = {
   roomId: string | null;
@@ -65,7 +56,15 @@ export function useRealtimeChannel({
       (payload) => {
         console.log('➕ Player joined:', payload.new);
         
-        const newPlayer = payload.new as Player;
+        const raw = payload.new as any;
+
+        const newPlayer: Player = {
+          ...raw,
+          // если avatar_id не входит в AvatarId — ставим дефолт
+          avatar_id: isValidAvatarId(raw.avatar_id) ? raw.avatar_id : DEFAULT_AVATAR_ID,
+          // если joined_at вдруг отсутствует — подстрахуемся
+          joined_at: raw.joined_at ?? new Date().toISOString(),
+        };
         
         setPlayers((prev) => {
           // Проверяем дубликат
