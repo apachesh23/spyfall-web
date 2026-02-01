@@ -162,12 +162,13 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
           {/* Правая колонка - Настройки */}
           <div className="space-y-6">
-            {isHost && settings && (
+            {settings && (
               <div className="bg-white rounded-lg shadow p-6">
                 <RoomSettings
                   settings={settings}
                   onSettingsChange={setSettings}
                   onSave={saveSettings}
+                  isHost={isHost}
                 />
               </div>
             )}
@@ -180,15 +181,6 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
                   onStart={startGame}
                   starting={startingGame}
                 />
-              </div>
-            )}
-
-            {/* Информация для не-хостов */}
-            {!isHost && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <p className="text-sm text-gray-700 text-center">
-                  Ожидаем пока ведущий запустит игру...
-                </p>
               </div>
             )}
           </div>

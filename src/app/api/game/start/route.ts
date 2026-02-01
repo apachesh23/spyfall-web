@@ -1,5 +1,4 @@
-// /api/game/start/route.ts - УЛУЧШЕННАЯ ВЕРСИЯ
-// КРИТИЧНО: убрали channel.subscribe(), только БД
+// /api/game/start/route.ts - ИСПРАВЛЕНО для avatar_id
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
@@ -36,13 +35,21 @@ export async function POST(request: Request) {
     // 2. Проверяем количество игроков
     const { data: players, error: playersError } = await supabase
       .from('players')
-      .select('id, nickname, avatar')
+      .select('id, nickname, avatar_id') // ← ИСПРАВЛЕНО: было avatar
       .eq('room_id', roomId)
       .order('joined_at', { ascending: true });
 
-    if (playersError || !players || players.length < 3) {
+    if (playersError) {
+      console.error('Players load error:', playersError);
+      return NextResponse.json({ error: 'Failed to load players' }, { status: 500 });
+    }
+
+    if (!players || players.length < 3) {
+      console.log('Not enough players:', players?.length);
       return NextResponse.json({ error: 'Need at least 3 players' }, { status: 400 });
     }
+
+    console.log('✅ Players loaded:', players.length);
 
     const settings = room.settings || {};
 
@@ -94,24 +101,24 @@ export async function POST(request: Request) {
 
     // 7. Обновляем комнату - ОДНОЙ ТРАНЗАКЦИЕЙ
     const gameStartedAt = new Date();
-    const durationMs = settings.game_duration * 60 * 1000;
+    const durationMs = (settings.game_duration || 15) * 60 * 1000;
     const gameEndsAt = new Date(gameStartedAt.getTime() + durationMs);
 
     console.log('⏰ Game timing:');
     console.log('  Started at:', gameStartedAt.toISOString());
-    console.log('  Duration:', settings.game_duration, 'minutes');
+    console.log('  Duration:', settings.game_duration || 15, 'minutes');
     console.log('  Ends at:', gameEndsAt.toISOString());
 
     const { error: updateError } = await supabase
       .from('rooms')
       .update({
-        status: 'playing', // ← КЛЮЧЕВОЕ ИЗМЕНЕНИЕ - клиенты увидят через postgres_changes
+        status: 'playing',
         location_id: randomLocation.id,
         selected_theme: randomTheme,
         spy_ids: spyIds,
         game_started_at: gameStartedAt.toISOString(),
         game_ends_at: gameEndsAt.toISOString(),
-        updated_at: new Date().toISOString(), // ← для версионирования
+        updated_at: new Date().toISOString(),
       })
       .eq('id', roomId);
 
@@ -119,8 +126,6 @@ export async function POST(request: Request) {
       console.error('Room update error:', updateError);
       throw updateError;
     }
-
-    console.log('Room updated to playing');
 
     console.log('✅ Game started successfully');
 

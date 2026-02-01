@@ -1,22 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+// src/components/game/voting/VotingModal.tsx - ИСПРАВЛЕНО
 
-type Player = {
-  id: string;
-  nickname: string;
-  avatar: string;
-  is_alive: boolean;
-};
+import { useState, useEffect, useRef } from 'react';
+import { PlayerAvatar } from '@/components/player/PlayerAvatar';
+import type { GamePlayer } from '@/types';
 
 type VotingModalProps = {
   isOpen: boolean;
-  players: Player[];
+  players: GamePlayer[];  // ← ИСПРАВЛЕНО: было Player[]
   currentPlayerId: string | null;
   votedPlayers: Set<string>;
   endsAt: string;
   onVote: (suspectId: string) => void;
   myVote: string | null;
   onTimeExpired: () => void;
-  revoteCandidates?: string[]; // Для повторного голосования
+  revoteCandidates?: string[];
 };
 
 export function VotingModal({
@@ -62,12 +59,7 @@ export function VotingModal({
 
   if (!isOpen) return null;
 
-  // КЛЮЧЕВАЯ ЛОГИКА:
-  // Если есть revoteCandidates - показываем только их (повторное голосование)
-  // Если нет - показываем всех живых (обычное голосование)
   const isRevote = revoteCandidates.length > 0;
-  
-  // НОВОЕ: Проверяем является ли текущий игрок кандидатом
   const isCandidate = isRevote && currentPlayerId && revoteCandidates.includes(currentPlayerId);
   
   const displayPlayers = isRevote
@@ -104,99 +96,72 @@ export function VotingModal({
           {isRevote ? '🔄 Повторное голосование' : '🗳️ Голосование'}
         </h2>
 
-        {/* Информация для обычных игроков в revote */}
-        {isRevote && !isCandidate && (
-          <p style={{ 
-            background: '#fff3e0', 
-            padding: '10px', 
-            borderRadius: '8px',
-            fontSize: '14px',
-            marginBottom: '15px'
-          }}>
-            ⚠️ Была ничья! Выбор только между лидерами.
-          </p>
-        )}
-
-        {/* НОВОЕ: Информация для кандидатов */}
-        {isRevote && isCandidate && (
-          <p style={{ 
-            background: '#e3f2fd', 
-            padding: '15px', 
-            borderRadius: '8px',
-            fontSize: '14px',
-            marginBottom: '15px',
-            border: '2px solid #2196f3'
-          }}>
-            🎯 <strong>Ты в повторном голосовании!</strong><br/>
-            Твой голос автоматически засчитан против оппонента.<br/>
-            Ожидай решения других игроков...
-          </p>
-        )}
-        
         <div style={{
-          background: '#f5f5f5',
+          background: isRevote ? '#fff3e0' : '#e3f2fd',
           padding: '15px',
           borderRadius: '8px',
-          textAlign: 'center',
           marginBottom: '20px',
+          textAlign: 'center',
         }}>
-          <div style={{ fontSize: '14px', marginBottom: '5px' }}>Время на голосование:</div>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: minutes < 1 ? 'red' : 'black' }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </div>
+          <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+            {isRevote ? 'Выбери кого исключить' : 'Выбери подозреваемого'}
+          </p>
         </div>
 
         {hasVoted ? (
           <div style={{
             background: '#e8f5e9',
-            padding: '15px',
+            padding: '20px',
             borderRadius: '8px',
-            marginBottom: '20px',
+            textAlign: 'center',
           }}>
-            <p style={{ margin: 0, color: 'green' }}>
-              ✅ Ты проголосовал за: <strong>{players.find(p => p.id === myVote)?.nickname}</strong>
+            <div style={{ fontSize: '48px', marginBottom: '10px' }}>✅</div>
+            <p style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
+              Твой голос учтён!
             </p>
             <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
-              Ожидаем остальных игроков или окончания таймера...
+              Ожидаем остальных игроков...
             </p>
-            
-            {/* НОВОЕ: Прогресс голосования */}
-            <div style={{ marginTop: '15px' }}>
-              <div style={{ fontSize: '14px', marginBottom: '5px' }}>
-                Проголосовало: {votedPlayers.size} / {players.filter(p => p.is_alive).length}
-              </div>
-              <div style={{ 
-                background: '#ddd', 
-                height: '8px', 
-                borderRadius: '4px',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  background: '#4caf50',
-                  height: '100%',
-                  width: `${(votedPlayers.size / players.filter(p => p.is_alive).length) * 100}%`,
-                  transition: 'width 0.3s'
-                }} />
-              </div>
-            </div>
+            <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
+              Проголосовало: {votedPlayers.size} / {displayPlayers.length}
+            </p>
           </div>
         ) : (
           <>
-            <h3>Выбери подозреваемого:</h3>
+            {isCandidate && (
+              <div style={{
+                background: '#ffebee',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                textAlign: 'center',
+              }}>
+                <p style={{ margin: 0, fontSize: '14px', color: 'red' }}>
+                  ⚠️ Ты один из кандидатов на исключение!<br/>
+                  Твой голос автоматически добавлен.
+                </p>
+              </div>
+            )}
+
             <div style={{ marginBottom: '20px' }}>
               {displayPlayers.map((player) => {
                 const isMe = player.id === currentPlayerId;
-                const isDisabled = isMe;
                 const isSelected = selectedPlayer === player.id;
-                
+                const isDisabled = isCandidate && isMe;
+
                 return (
                   <div
                     key={player.id}
                     onClick={() => !isDisabled && setSelectedPlayer(player.id)}
                     style={{
-                      padding: '12px',
-                      marginBottom: '8px',
-                      border: isSelected ? '3px solid blue' : '2px solid #ddd',
+                      padding: '15px',
+                      marginBottom: '10px',
+                      border: isSelected
+                        ? '3px solid blue'
+                        : '2px solid #ddd',
                       borderRadius: '8px',
                       cursor: isDisabled ? 'not-allowed' : 'pointer',
                       background: isSelected ? '#e3f2fd' : isDisabled ? '#f5f5f5' : 'white',
@@ -204,7 +169,7 @@ export function VotingModal({
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>{player.avatar}</span>
+                      <PlayerAvatar avatarId={player.avatar_id} size="sm" />
                       <span style={{ fontSize: '16px' }}>
                         {player.nickname}
                         {isMe && ' (Ты)'}

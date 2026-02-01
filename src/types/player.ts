@@ -9,3 +9,16 @@ export type Player = {
   room_id: string;
   joined_at: string;
 };
+
+export type GamePlayer = Player & {
+  is_spy?: boolean;
+  role?: string | null;
+  is_alive?: boolean;
+  wants_early_vote?: boolean;
+};
+
+export type PlayerInput = {
+  nickname: string;
+  avatar_id: AvatarId;
+};
+

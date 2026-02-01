@@ -4,19 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import type { Player } from '@/types/player';
-
-
-type Settings = {
-  game_duration: number;
-  vote_duration: number;
-  spy_count: number;
-  mode_roles: boolean;
-  mode_theme: boolean;
-  mode_hidden_threat: boolean;
-  mode_shadow_alliance: boolean;
-  mode_spy_chaos: boolean;
-};
+import type { Player, Settings } from '@/types';
 
 export function useRoomData(code: string) {
   const router = useRouter();

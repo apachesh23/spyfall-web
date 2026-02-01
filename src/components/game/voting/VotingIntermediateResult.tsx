@@ -1,13 +1,8 @@
-// ИСПРАВЛЕННАЯ ВЕРСИЯ VotingIntermediateResult.tsx
-// Исправлено: setState в render warning
+// src/components/game/voting/VotingIntermediateResult.tsx - ИСПРАВЛЕНО
 
 import { useState, useEffect } from 'react';
-
-type Player = {
-  id: string;
-  nickname: string;
-  avatar: string;
-};
+import { PlayerAvatar } from '@/components/player/PlayerAvatar';
+import type { GamePlayer } from '@/types';
 
 type VotingIntermediateResultProps = {
   isOpen: boolean;
@@ -18,7 +13,7 @@ type VotingIntermediateResultProps = {
     candidates?: string[];
     voteCounts: Record<string, number>;
   };
-  players: Player[];
+  players: GamePlayer[];
   onClose: () => void;
   countdownSeconds?: number;
 };
@@ -42,7 +37,6 @@ export function VotingIntermediateResult({
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(interval);
-          // НЕ вызываем onClose здесь - вызовем в отдельном useEffect
           return 0;
         }
         return prev - 1;
@@ -50,12 +44,10 @@ export function VotingIntermediateResult({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, countdownSeconds]); // убрали onClose из deps
+  }, [isOpen, countdownSeconds]);
 
-  // ИСПРАВЛЕНИЕ: Вызываем onClose в отдельном useEffect
   useEffect(() => {
     if (isOpen && countdown === 0) {
-      // Используем setTimeout чтобы вызвать после текущего рендера
       const timer = setTimeout(() => {
         console.log('Closing intermediate result');
         onClose();
@@ -67,7 +59,6 @@ export function VotingIntermediateResult({
 
   if (!isOpen) return null;
 
-  // Сортируем голоса по убыванию
   const sortedVotes = Object.entries(result.voteCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([playerId, votes]) => ({
@@ -112,41 +103,44 @@ export function VotingIntermediateResult({
       }}>
         <h2 style={{ marginTop: 0, textAlign: 'center' }}>📊 Результаты голосования</h2>
 
-        {/* Таблица голосов */}
         <div style={{ marginBottom: '30px' }}>
           <h3>Голоса:</h3>
-          {sortedVotes.map(({ player, votes }) => (
-            <div
-              key={player?.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '12px',
-                marginBottom: '8px',
-                background: '#f5f5f5',
-                borderRadius: '8px',
-                border: player?.id === result.eliminatedId ? '3px solid red' : 'none',
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>
-                {player?.avatar} {player?.nickname}
-              </span>
-              <span style={{ 
-                fontSize: '20px', 
-                fontWeight: 'bold',
-                color: player?.id === result.eliminatedId ? 'red' : 'black'
-              }}>
-                {votes} {votes === 1 ? 'голос' : votes < 5 ? 'голоса' : 'голосов'}
-                {player?.id === result.eliminatedId && ' ☠️'}
-              </span>
-            </div>
-          ))}
+          {sortedVotes.map(({ player, votes }) => {
+            if (!player) return null;
+            
+            return (
+              <div
+                key={player.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '12px',
+                  marginBottom: '8px',
+                  background: '#f5f5f5',
+                  borderRadius: '8px',
+                  border: player.id === result.eliminatedId ? '3px solid red' : 'none',
+                }}
+              >
+                <span style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PlayerAvatar avatarId={player.avatar_id} size="sm" />
+                  {player.nickname}
+                </span>
+                <span style={{ 
+                  fontSize: '20px', 
+                  fontWeight: 'bold',
+                  color: player.id === result.eliminatedId ? 'red' : 'black'
+                }}>
+                  {votes} {votes === 1 ? 'голос' : votes < 5 ? 'голоса' : 'голосов'}
+                  {player.id === result.eliminatedId && ' ☠️'}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <hr style={{ margin: '30px 0' }} />
 
-        {/* Сообщение */}
         <div style={{
           background: '#f5f5f5',
           padding: '30px',
@@ -156,7 +150,6 @@ export function VotingIntermediateResult({
           <div style={{ fontSize: '48px', marginBottom: '15px' }}>{emoji}</div>
           <h3 style={{ margin: '0 0 20px 0', fontSize: '20px' }}>{message}</h3>
           
-          {/* Таймер */}
           <div style={{
             fontSize: '48px',
             fontWeight: 'bold',

@@ -1,64 +1,53 @@
+// src/hooks/game/useGameData.ts - ИСПРАВЛЕННАЯ ВЕРСИЯ
+
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-
-type Player = {
-  id: string;
-  nickname: string;
-  avatar: string;
-  is_spy: boolean;
-  role: string | null;
-  is_alive: boolean;
-  is_host?: boolean;
-  wants_early_vote?: boolean; // ← ДОБАВИЛИ
-};
-
-type GameData = {
-  locationName: string;
-  theme: string;
-  myRole: string | null;
-  isSpy: boolean;
-  isAlive: boolean;
-  settings: any;
-  endsAt: string;
-  spyIds: string[];
-};
+import type { GamePlayer, GameData } from '@/types';
 
 export function useGameData(code: string) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [gameData, setGameData] = useState<GameData | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [gameStartedAt, setGameStartedAt] = useState<string | null>(null); // ← ДОБАВИЛИ
+  const [gameStartedAt, setGameStartedAt] = useState<string | null>(null);
 
   useEffect(() => {
     loadGame();
-    
-    // Подписываемся на изменения статуса комнаты
+
     const subscription = supabase
-      .channel(`room-status-${code}`)
+      .channel(`game-${code}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'players',
+        },
+        () => {
+          console.log('Player updated - Reloading...');
+          loadGame();
+        }
+      )
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'rooms',
-          filter: `code=eq.${code}`
         },
-        (payload) => {
-          console.log('🔄 Room updated:', payload);
-          // Если статус изменился на playing - перезагружаем
-          if (payload.new.status === 'playing') {
-            console.log('🎮 New game detected! Reloading...');
-            loadGame();
-          }
+        () => {
+          console.log('Room updated - Reloading...');
+          loadGame();
         }
       )
       .subscribe();
-  
+
     return () => {
       supabase.removeChannel(subscription);
     };
@@ -69,15 +58,17 @@ export function useGameData(code: string) {
     try {
       const playerId = localStorage.getItem(`player_${code}`);
       console.log('Player ID from localStorage:', playerId);
+      
       if (!playerId) {
         router.push(`/invite/${code}`);
         return;
       }
+      
       setCurrentPlayerId(playerId);
 
       const { data: room } = await supabase
         .from('rooms')
-        .select('id, status, location_id, selected_theme, spy_ids, settings, game_ends_at, game_started_at') // ← ДОБАВИЛИ game_started_at
+        .select('id, status, location_id, selected_theme, spy_ids, settings, game_ends_at, game_started_at')
         .eq('code', code)
         .single();
 
@@ -87,15 +78,16 @@ export function useGameData(code: string) {
       }
 
       setRoomId(room.id);
-      setGameStartedAt(room.game_started_at); // ← СОХРАНЯЕМ
+      setGameStartedAt(room.game_started_at);
 
+      // ИСПРАВЛЕНО: avatar_id вместо avatar
       const { data: allPlayers } = await supabase
         .from('players')
-        .select('id, nickname, avatar, is_spy, role, is_alive, is_host, wants_early_vote')
+        .select('id, nickname, avatar_id, is_spy, role, is_alive, is_host, wants_early_vote')
         .eq('room_id', room.id)
         .order('joined_at', { ascending: true });
 
-      setPlayers(allPlayers || []);
+      setPlayers((allPlayers || []) as GamePlayer[]);
 
       const currentPlayer = allPlayers?.find(p => p.id === playerId);
       if (!currentPlayer) {
@@ -136,11 +128,11 @@ export function useGameData(code: string) {
     loading,
     gameData,
     players,
+    setPlayers,
     currentPlayerId,
     isHost,
     roomId,
-    setPlayers,
     myWantsEarlyVote: myPlayer?.wants_early_vote || false,
-    gameSessionKey: gameStartedAt || 'no-game', // ← ИСПОЛЬЗУЕМ STATE
+    gameSessionKey: gameStartedAt || 'no-game',
   };
 }
