@@ -4,7 +4,6 @@ import { use } from 'react';
 import { AuthMusicMount } from '@/components/layout/AuthMusicMount';
 import { LobbyMusicMount } from '@/components/layout/LobbyMusicMount';
 import { VideoBackground } from '@/components/layout/VideoBackground';
-import { RotatePrompt } from '@/components/layout/RotatePrompt';
 import { TopBar } from '@/components/layout/TopBar';
 import { ReactionsBar } from '@/components/layout/ReactionsBar';
 import { ReactionsProvider } from '@/contexts/ReactionsContext';
@@ -24,7 +23,6 @@ export default function RoomLayout({
       <VideoBackground contentClassName="videoContentLobbyMobile" >
         <AuthMusicMount />
         <LobbyMusicMount />
-        <RotatePrompt />
         <div className={styles.screenRoot}>
           <div className={styles.screenGrid}>
             <header className={styles.header}>

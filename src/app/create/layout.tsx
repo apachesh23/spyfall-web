@@ -2,7 +2,6 @@
 
 import { AuthMusicMount } from '@/components/layout/AuthMusicMount';
 import { VideoBackground } from '@/components/layout/VideoBackground';
-import { RotatePrompt } from '@/components/layout/RotatePrompt';
 import { TopBar } from '@/components/layout/TopBar';
 import styles from './layout.module.css';
 
@@ -14,7 +13,6 @@ export default function CreateLayout({
   return (
     <VideoBackground>
       <AuthMusicMount />
-      <RotatePrompt />
       <div className={styles.screenRoot}>
         <div className={styles.screenGrid}>
           <header className={styles.header}>
