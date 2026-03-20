@@ -35,6 +35,16 @@ export const metadata: Metadata = {
   title: "Spyfall",
   description: "Spyfall game",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/duck-favicon.ico?v=2" },
+      { url: "/duck-favicon-16x16.png?v=2", sizes: "16x16", type: "image/png" },
+      { url: "/duck-favicon-32x32.png?v=2", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: [{ url: "/duck-favicon.ico?v=2" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   // themeColor удаляем отсюда, он теперь в viewport
   appleWebApp: {
     capable: true,

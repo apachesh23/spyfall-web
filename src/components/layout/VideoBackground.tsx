@@ -24,9 +24,11 @@ export function VideoBackground({ children, contentClassName = '', backgroundTyp
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             className={styles.videoEl}
             aria-hidden
+            poster="/videos/background-poster.webp"
+            disablePictureInPicture
           >
             <source src="/videos/background.webm" type="video/webm" />
           </video>

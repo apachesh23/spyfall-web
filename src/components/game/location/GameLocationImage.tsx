@@ -11,17 +11,26 @@ type GameLocationImageProps = {
 };
 
 export function GameLocationImage({ imageKey, isSpy = false }: GameLocationImageProps) {
-  const [spyKey, setSpyKey] = useState<string | null>(null);
+  const [spyKey, setSpyKey] = useState<string | null>(() => {
+    if (!isSpy) return null;
+    const placeholders = ['spy1', 'spy2', 'spy3', 'spy4'];
+    const idx = Math.floor(Math.random() * placeholders.length);
+    return placeholders[idx];
+  });
 
   useEffect(() => {
-    if (!isSpy) return;
+    if (!isSpy) {
+      setSpyKey(null);
+      return;
+    }
     if (spyKey) return;
     const placeholders = ['spy1', 'spy2', 'spy3', 'spy4'];
     const idx = Math.floor(Math.random() * placeholders.length);
     setSpyKey(placeholders[idx]);
   }, [isSpy, spyKey]);
 
-  const currentKey = isSpy ? (spyKey ?? 'spy1') : (imageKey || 'default');
+  const currentKey = isSpy ? spyKey : imageKey;
+  const hasLocationImage = !!currentKey;
   const containerRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
@@ -84,11 +93,16 @@ export function GameLocationImage({ imageKey, isSpy = false }: GameLocationImage
             transformStyle: "preserve-3d",
           }}
         >
-          <img
-            src={`/location/${currentKey}.webp`}
-            alt="Location"
-            className={styles.locationImage}
-          />
+          {hasLocationImage ? (
+            <img
+              src={`/location/${currentKey}.webp`}
+              alt="Location"
+              className={styles.locationImage}
+              decoding="async"
+            />
+          ) : (
+            <div className={styles.locationSkeleton} aria-hidden />
+          )}
 
           {/* Слой блика */}
           <motion.div
@@ -124,6 +138,9 @@ export function GameLocationImage({ imageKey, isSpy = false }: GameLocationImage
         src="/location/location_frame.webp"
         alt="Рамка"
         className={styles.frameImage}
+        width={1450}
+        height={927}
+        decoding="async"
       />
     </div>
   );

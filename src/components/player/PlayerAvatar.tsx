@@ -5,7 +5,6 @@
 
 'use client';
 
-import Image from 'next/image';
 import { AvatarId, getAvatarImage, getAvatar } from '@/lib/avatars';
 
 type PlayerAvatarProps = {
@@ -23,23 +22,18 @@ export function PlayerAvatar({ avatarId, size = 'md', className = '' }: PlayerAv
     lg: 'w-16 h-16',
   };
 
-  const sizePx = {
-    sm: '32px',
-    md: '48px',
-    lg: '64px',
-  };
-
   return (
     <div 
       className={`${sizeClasses[size]} relative rounded-full overflow-hidden ${className}`}
       title={avatar.name}
     >
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={getAvatarImage(avatarId)}
         alt={avatar.name}
-        fill
-        sizes={sizePx[size]}
-        className="object-cover"
+        className="w-full h-full object-cover block"
+        loading="lazy"
+        decoding="async"
       />
     </div>
   );

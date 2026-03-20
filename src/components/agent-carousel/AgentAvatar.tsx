@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import type { AgentAvatar as Avatar } from '@/lib/avatars';
 import styles from './Agent.module.css';
 
@@ -82,13 +81,15 @@ export function AgentAvatar(props: AgentAvatarProps) {
             boxShadow,
           }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={avatar.image}
             alt={avatar.name}
             width={size}
             height={size}
             className={styles.agentArcImage}
-            sizes={`${size}px`}
+            loading="lazy"
+            decoding="async"
           />
         </div>
         {showMask && avatar.mask && (
@@ -117,12 +118,13 @@ export function AgentAvatar(props: AgentAvatarProps) {
       className={`${styles.agentGridButton} ${isSelected ? styles.agentGridButtonSelected : ''}`}
       title={avatar.name}
     >
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={avatar.image}
         alt={avatar.name}
-        fill
-        sizes="64px"
         className={styles.agentGridImage}
+        loading="lazy"
+        decoding="async"
       />
     </button>
   );

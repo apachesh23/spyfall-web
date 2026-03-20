@@ -96,7 +96,7 @@ textarea {
 .video-bg-layer {
   transform-origin: center center;
 }
-@media (max-width: 1024px) {
+@media (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .video-bg-layer {
     transform: scale(1.2);
   }
