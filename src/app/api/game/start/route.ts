@@ -116,8 +116,7 @@ export async function POST(request: Request) {
       ? new Date(gameStartedAt.getTime() + 3 * 60 * 1000).toISOString()
       : null;
 
-    // TODO DEBUG: 10 сек для теста; вернуть 3 * 60 * 1000 для продакшена
-    const earlyVoteCooldownMs = 10 * 1000;
+    const earlyVoteCooldownMs = 3 * 60 * 1000;
     const earlyVoteAvailableAt = new Date(gameStartedAt.getTime() + earlyVoteCooldownMs).toISOString();
 
     const { data: newGame, error: gameInsertError } = await supabase

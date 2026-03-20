@@ -42,7 +42,7 @@ const RULE_TABS: RuleTab[] = [
   {
     id: 'spy',
     label: '🕵️ Шпион',
-    description: 'Шпион не знает локацию, но может попытаться угадать ее 1 раз за раунд.',
+    description: 'Шпион не знает локацию, но может попытаться угадать ее 1 раз за игру.',
     points: [],
   },
   {
@@ -227,7 +227,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                     <div className={`${styles.coreParagraph} ${styles.coreParagraphGoal}`}>
                       <p>
                         <span className={styles.roleAgent}>Цель агентов</span> - вычислить шпиона до конца
-                        раунда.
+                        игры.
                         <br />
                         <span className={styles.roleSpy}>Цель шпиона</span> - понять локацию и не выдать
                         себя.
@@ -235,7 +235,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                     </div>
 
                     <p className={styles.coreDuration}>
-                      <span className={styles.durationBadge}>⏱ Длительность раунда: 15 минут</span>
+                      <span className={styles.durationBadge}>⏱ Длительность игры: 15 минут</span>
                     </p>
                   </div>
                 ) : activeTab.id === 'flow' ? (
@@ -395,7 +395,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                           первое голосование доступно через <span className={styles.votingChip}>3 минуты</span>
                         </li>
                         <li>
-                          всего <span className={styles.votingChip}>2 голосования</span> за раунд
+                          всего <span className={styles.votingChip}>2 голосования</span> за игру
                         </li>
                         <li>
                           перезарядка между ними - <span className={styles.votingChip}>3 минуты</span>
@@ -405,7 +405,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
 
                     <h3 className={styles.votingTitle}>📢 Финальное голосование</h3>
                     <p className={styles.votingText}>
-                      Когда время раунда заканчивается, автоматически запускается финальное голосование.
+                      Когда время игры заканчивается, автоматически запускается финальное голосование.
                     </p>
                     <div className={styles.votingSectionNote}>
                       <ul className={styles.votingList}>
@@ -444,7 +444,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                       Дополнительный режим для <span className={styles.modesChip}>5+ игроков</span> и только
                       с <span className={styles.modesChip}>одним шпионом</span>.
                       <br />
-                      В этом режиме шпион получает активное действие и может выбрать одно из двух за раунд:
+                      В этом режиме шпион получает активное действие и может выбрать одно из двух за игру:
                     </p>
 
                     <p className={styles.modesLead}>Пример кнопок:</p>
@@ -468,7 +468,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                       </li>
                     </ul>
 
-                    <p className={styles.modesNote}>Сделать оба действия в одном раунде нельзя.</p>
+                    <p className={styles.modesNote}>Сделать оба действия в одной игре нельзя.</p>
                   </div>
                 ) : (
                   <>

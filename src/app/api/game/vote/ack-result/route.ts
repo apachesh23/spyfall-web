@@ -4,8 +4,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
-// TODO DEBUG: 10 сек для теста; вернуть 3 * 60 * 1000 для продакшена
-const EARLY_VOTE_COOLDOWN_MS = 10 * 1000;
+const EARLY_VOTE_COOLDOWN_MS = 3 * 60 * 1000;
 
 async function resumeGameFromGameRow(gameId: string, channel: RealtimeChannel) {
   const { data: game } = await supabase

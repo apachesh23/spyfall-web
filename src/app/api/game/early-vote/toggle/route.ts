@@ -11,8 +11,7 @@ function computeGameTimeSec(startedAt: string | null, durationMin?: number | nul
 }
 
 const EARLY_VOTE_MAX_USES = 2;
-// TODO DEBUG: 10 сек для теста; вернуть 3 для продакшена (минуты)
-const EARLY_VOTE_COOLDOWN_SEC = 10;
+const EARLY_VOTE_COOLDOWN_SEC = 3 * 60;
 
 export async function POST(request: Request) {
   try {

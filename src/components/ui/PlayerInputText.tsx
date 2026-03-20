@@ -48,6 +48,8 @@ export function PlayerInputText({
       >
         <input
           type="text"
+          inputMode={layout === 'code' ? 'numeric' : undefined}
+          pattern={layout === 'code' ? '[0-9]*' : undefined}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onClick={() => playUI('click')}

@@ -19,6 +19,7 @@ export default function CreateGamePage() {
   });
   const [isCreating, setIsCreating] = useState(false);
   const [nameError, setNameError] = useState(false);
+  const [nameShakeTick, setNameShakeTick] = useState(0);
   const stopGlobalLoader = useRouteLoaderStore((s) => s.stop);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -27,6 +28,7 @@ export default function CreateGamePage() {
     if (!form.nickname.trim()) {
       playUI('wrong');
       setNameError(true);
+      setNameShakeTick((v) => v + 1);
       return;
     }
     setNameError(false);
@@ -90,6 +92,7 @@ export default function CreateGamePage() {
           maxLength={20}
           disabled={isCreating}
           error={nameError}
+          shakeTrigger={nameShakeTick}
         />
       </div>
 

@@ -10,11 +10,11 @@ import styles from './GameSpyBlock.module.css';
 
 type GameSpyBlockProps = {
   onGuess?: (locationName: string) => void;
-  /** Режим «Скрытая угроза»: шпион может либо угадать, либо устранить один раз за раунд. */
+  /** Режим «Скрытая угроза»: шпион может либо угадать, либо устранить один раз за игру. */
   modeHiddenThreat?: boolean;
   players: GamePlayer[];
   onEliminate?: (playerId: string) => void;
-  /** Уже использованное действие в этом раунде: после этого обе кнопки блокируются. */
+  /** Уже использованное действие в этой игре: после этого обе кнопки блокируются. */
   spyActionType?: 'guess' | 'kill' | null;
   /** Момент разблокировки KILL (ISO) с сервера — переживает паузы и перезагрузку. */
   killUnlockAt?: string | null;
@@ -74,8 +74,8 @@ export function GameSpyBlock({
   const killUseGlassStyle = killUnavailableByPlayers || (!anyActionUsed && killLockedByTime);
 
   const subtitle = modeHiddenThreat
-    ? 'Вы можете выполнить только одно действие за раунд.'
-    : 'Назвать локацию можно только один раз за раунд.';
+    ? 'Вы можете выполнить только одно действие за игру.'
+    : 'Назвать локацию можно только один раз за игру.';
 
   const formatMsToTime = (ms: number) => {
     const totalSec = Math.max(0, Math.floor(ms / 1000));

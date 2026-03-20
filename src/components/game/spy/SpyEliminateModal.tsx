@@ -55,7 +55,7 @@ export function SpyEliminateModal({ open, onClose, players, onEliminate }: SpyEl
           >
             <div className={styles.header}>
               <h2 className={styles.title}>Кого устранить?</h2>
-              <p className={styles.hint}>Вы можете устранить только одного игрока за весь раунд.</p>
+              <p className={styles.hint}>Вы можете устранить только одного игрока за всю игру.</p>
             </div>
 
             <ul className={styles.list}>

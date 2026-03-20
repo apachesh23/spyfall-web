@@ -15,7 +15,8 @@ import { useRouteLoaderStore } from '@/store/route-loader-store';
 export default function InvitePage({ params }: { params: Promise<{ code: string }> }) {
   const { code: rawCode } = use(params);
   const isPlaceholderCode = rawCode === 'null';
-  const initialCode = isPlaceholderCode ? '' : rawCode.toUpperCase();
+  const sanitizeRoomCode = (value: string) => value.replace(/\D/g, '').slice(0, 6);
+  const initialCode = isPlaceholderCode ? '' : sanitizeRoomCode(rawCode);
 
   const router = useRouter();
   const stopGlobalLoader = useRouteLoaderStore((s) => s.stop);
@@ -28,6 +29,8 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState(false);
   const [roomCodeError, setRoomCodeError] = useState(false);
+  const [nameShakeTick, setNameShakeTick] = useState(0);
+  const [roomCodeShakeTick, setRoomCodeShakeTick] = useState(0);
   const [checking, setChecking] = useState(true);
 
   async function checkExistingPlayer(currentCode: string) {
@@ -73,15 +76,17 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const codeToUse = roomCode.trim().toUpperCase();
+    const codeToUse = sanitizeRoomCode(roomCode.trim());
     if (!codeToUse) {
       playUI('wrong');
       setRoomCodeError(true);
+      setRoomCodeShakeTick((v) => v + 1);
       return;
     }
     if (!form.nickname.trim()) {
       playUI('wrong');
       setNameError(true);
+      setNameShakeTick((v) => v + 1);
       return;
     }
     setRoomCodeError(false);
@@ -143,6 +148,7 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
           maxLength={20}
           disabled={loading}
           error={nameError}
+          shakeTrigger={nameShakeTick}
         />
       </div>
 
@@ -151,13 +157,14 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
           layout="code"
           value={roomCode}
           onChange={(v) => {
-            setRoomCode(v.toUpperCase());
+            setRoomCode(sanitizeRoomCode(v));
             setRoomCodeError(false);
           }}
           placeholder="Код комнаты"
           maxLength={6}
           disabled={loading}
           error={roomCodeError}
+          shakeTrigger={roomCodeShakeTick}
         />
       </div>
 

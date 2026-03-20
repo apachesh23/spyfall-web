@@ -30,9 +30,11 @@ const MODE_CARDS: Array<{
   { key: 'mode_multi_spy', lottie: '/lottie/shadow_alliance.json', title: 'Сеть шпионов', desc: '7–10 игроков: 2 шпиона, 11+: 3 шпиона' },
   { key: 'mode_theme', lottie: '/lottie/theme-location.json', title: 'Тема локации', desc: 'Будет известна тема локации' },
   { key: 'mode_roles', lottie: '/lottie/role-location.json', title: 'Роли локации', desc: 'Добавить РП роли всем игрокам' },
-  { key: 'mode_hidden_threat', lottie: '/lottie/hidden_threat.json', title: 'Скрытая угроза', desc: 'Шпион может убивать 1 раз за раунд (только при 1 шпионе)' },
+  { key: 'mode_hidden_threat', lottie: '/lottie/hidden_threat.json', title: 'Скрытая угроза', desc: 'Шпион может убивать 1 раз за раунд (5+ игроков)' },
   { key: 'mode_spy_chaos', lottie: '/lottie/chaos.json', title: 'Шпионский хаос', desc: 'Случайное кол-во шпионов от 1 до макс. (только с Сетью шпионов)' },
 ];
+
+const HIDDEN_MODE_KEYS = new Set<keyof Settings>(['mode_multi_spy', 'mode_spy_chaos']);
 
 export function RoomSettings({ settings, onSettingsChange, isHost, playerCount }: RoomSettingsProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -56,7 +58,8 @@ export function RoomSettings({ settings, onSettingsChange, isHost, playerCount }
     [localSettings.mode_multi_spy, playerCount],
   );
   const chaosAvailable = effectiveMultiSpy;
-  const hiddenThreatAvailable = effectiveSpyCount === 1;
+  const hiddenThreatMinPlayersReached = playerCount >= 5;
+  const hiddenThreatAvailable = effectiveSpyCount === 1 && hiddenThreatMinPlayersReached;
 
   /** Отображаемое значение шпионов: "1", "2", "3" или "1–2", "1–3" при хаосе */
   const spyCountDisplay =
@@ -73,6 +76,15 @@ export function RoomSettings({ settings, onSettingsChange, isHost, playerCount }
       lastUpdateFromParent.current = stringified;
     }
   }, [settings]);
+
+  useEffect(() => {
+    if (!isHost) return;
+    if (!localSettings.mode_hidden_threat) return;
+    if (hiddenThreatAvailable) return;
+    const newSettings = { ...localSettings, mode_hidden_threat: false };
+    setLocalSettings(newSettings);
+    onSettingsChange(newSettings);
+  }, [hiddenThreatAvailable, isHost, localSettings, onSettingsChange]);
 
   const handleToggle = (key: keyof Settings, value: boolean | number) => {
     if (!isHost) return;
@@ -213,7 +225,7 @@ export function RoomSettings({ settings, onSettingsChange, isHost, playerCount }
         </div>
       </div>
 
-      {MODE_CARDS.map(({ key, lottie, title, desc }) => {
+      {MODE_CARDS.filter(({ key }) => !HIDDEN_MODE_KEYS.has(key)).map(({ key, lottie, title, desc }) => {
         const isDisabled =
           !isHost ||
           (key === 'mode_multi_spy' && !multiSpyAvailable) ||

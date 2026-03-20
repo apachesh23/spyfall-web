@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { isValidAvatarId, DEFAULT_AVATAR_ID } from '@/lib/avatars';
 
 function generateRoomCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars = '0123456789';
   let code = '';
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       // return NextResponse.json({ error: 'Invalid avatar' }, { status: 400 });
     }
 
-    const roomCode = generateRoomCode();
+    let roomCode = '';
     const hostId = crypto.randomUUID();
 
     const initialSettings = {
@@ -48,21 +48,35 @@ export async function POST(request: Request) {
       max_players: 20,
     };
 
-    // 1. Создаём комнату
-    const { data: room, error: roomError } = await supabase
-      .from('rooms')
-      .insert({
-        code: roomCode,
-        host_id: hostId,
-        status: 'waiting',
-        settings: initialSettings,
-      })
-      .select()
-      .single();
+    // 1. Создаём комнату (6-значный цифровой код) с ретраями на случай коллизий
+    let room: { id: string; code: string } | null = null;
+    let roomError: unknown = null;
+    const maxAttempts = 12;
 
-    if (roomError) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      roomCode = generateRoomCode();
+      const { data, error } = await supabase
+        .from('rooms')
+        .insert({
+          code: roomCode,
+          host_id: hostId,
+          status: 'waiting',
+          settings: initialSettings,
+        })
+        .select('id, code')
+        .single();
+
+      if (!error && data) {
+        room = data;
+        roomError = null;
+        break;
+      }
+      roomError = error;
+    }
+
+    if (roomError || !room) {
       console.error('Room creation error:', roomError);
-      throw roomError;
+      throw roomError || new Error('Failed to generate unique room code');
     }
 
     // 2. Создаём игрока-хоста

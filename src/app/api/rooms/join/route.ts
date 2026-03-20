@@ -12,6 +12,10 @@ export async function POST(request: Request) {
     if (!roomCode || !nickname || avatarId === undefined) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
+    const normalizedRoomCode = String(roomCode).trim();
+    if (!/^\d{6}$/.test(normalizedRoomCode)) {
+      return NextResponse.json({ error: 'Код комнаты должен состоять из 6 цифр' }, { status: 400 });
+    }
 
     // Валидация
     if (nickname.length > 20) {
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
     const { data: room, error: roomError } = await supabase
       .from('rooms')
       .select('id, status, settings')
-      .eq('code', roomCode)
+      .eq('code', normalizedRoomCode)
       .single();
 
     if (roomError || !room) {
@@ -84,7 +88,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true,
-      roomCode,
+      roomCode: normalizedRoomCode,
       roomId: room.id,
       playerId: player.id
     });
