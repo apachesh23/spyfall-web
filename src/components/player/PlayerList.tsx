@@ -1,11 +1,30 @@
-// /components/player/PlayerList.tsx
-// Список игроков для Lobby
-// Использует PlayerAvatar для отображения
-
 'use client';
 
-import { PlayerAvatar } from './PlayerAvatar';
+import { useEffect, useRef, useState } from 'react';
+import { PlayerItem } from './PlayerItem';
+import { useReactions } from '@/contexts/ReactionsContext';
 import type { Player } from '@/types/player';
+import styles from './PlayerList.module.css';
+
+const COMPACT_LAYOUT_QUERY: Record<'lobby' | 'game', string> = {
+  lobby: '(max-width: 1024px)',
+  game: '(max-width: 1270px)',
+};
+
+function useCompactPlayerListLayout(layout: 'lobby' | 'game'): boolean {
+  const query = COMPACT_LAYOUT_QUERY[layout];
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const update = () => setMatches(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, [query]);
+
+  return matches;
+}
 
 type PlayerListProps = {
   players: Player[];
@@ -14,104 +33,102 @@ type PlayerListProps = {
   isHost: boolean;
   onKick?: (playerId: string) => void;
   kickingPlayerId?: string | null;
+  /** В игре: id изгнанных игроков (карточка полупрозрачная + подпись). Игроки могут иметь death_reason для «Убит» vs «Изгнан». */
+  eliminatedPlayerIds?: Set<string>;
+  /** Лобби: компактный список с ≤1024px; игра: сетка игры переключается на ≤1270px. */
+  layout?: 'lobby' | 'game';
 };
 
-export function PlayerList({ 
-  players, 
-  currentPlayerId, 
+export function PlayerList({
+  players,
+  currentPlayerId,
   onlinePlayers,
   isHost,
   onKick,
-  kickingPlayerId 
+  kickingPlayerId,
+  eliminatedPlayerIds,
+  layout = 'lobby',
 }: PlayerListProps) {
-  return (
-    <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-gray-900">
-        Игроки ({players.length})
-      </h2>
+  const reactions = useReactions();
+  const activeReactions = reactions?.activeReactions ?? [];
+  const isCompactLayout = useCompactPlayerListLayout(layout);
+  const listScrollRef = useRef<HTMLDivElement>(null);
+  const prevReactionIdsRef = useRef<Set<string>>(new Set());
 
-      <div className="space-y-2">
+  const minPlayers = 3;
+  const placeholdersNeeded = Math.max(0, minPlayers - players.length);
+
+  // На мобилке при новой реакции скроллим только список игроков (не всю страницу)
+  useEffect(() => {
+    if (!isCompactLayout || activeReactions.length === 0) return;
+    const currentIds = new Set(activeReactions.map((r) => r.id));
+    const newReaction = activeReactions.find((r) => !prevReactionIdsRef.current.has(r.id));
+    prevReactionIdsRef.current = currentIds;
+    if (newReaction) {
+      const container = listScrollRef.current;
+      const el = container?.querySelector(
+        `[data-player-id="${newReaction.playerId}"]`
+      ) as HTMLElement | null;
+      if (container && el) {
+        const containerWidth = container.clientWidth;
+        const elLeft = el.offsetLeft;
+        const elWidth = el.offsetWidth;
+        const maxScroll = container.scrollWidth - containerWidth;
+        const targetScrollLeft = Math.max(
+          0,
+          Math.min(maxScroll, elLeft - containerWidth / 2 + elWidth / 2)
+        );
+        container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+      }
+    }
+  }, [activeReactions, isCompactLayout]);
+
+  return (
+    <div className={styles.list} data-list-layout={layout}>
+      <div ref={listScrollRef} className={styles.listScroll}>
+        {/* Рендерим реальных игроков */}
         {players.map((player) => {
           const isMe = player.id === currentPlayerId;
           const isOnline = onlinePlayers.has(player.id);
           const canKick = isHost && !isMe && !player.is_host;
           const isKicking = kickingPlayerId === player.id;
+          const activeReaction = activeReactions.find((r) => r.playerId === player.id) ?? null;
+
+          const isEliminated = eliminatedPlayerIds?.has(player.id);
+          const deathReason = (player as { death_reason?: string | null }).death_reason ?? null;
 
           return (
-            <div
-              key={player.id}
-              className={`
-                flex items-center gap-3 p-3 rounded-lg border
-                transition-colors
-                ${isMe 
-                  ? 'bg-blue-50 border-blue-300 ring-1 ring-blue-200' 
-                  : 'bg-white border-gray-200 hover:border-gray-300'
-                }
-              `}
-            >
-              {/* Аватар игрока */}
-              <div className="relative">
-                <PlayerAvatar 
-                  avatarId={player.avatar_id} 
-                  size="md"
-                  className={isMe ? 'ring-2 ring-blue-400' : ''}
-                />
-                
-                {/* Online индикатор */}
-                {isOnline && (
-                  <div 
-                    className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
-                    title="Онлайн"
-                  />
-                )}
-              </div>
-
-              {/* Информация */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-gray-900 truncate">
-                    {player.nickname}
-                  </span>
-                  
-                  {player.is_host && (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
-                      👑 Ведущий
-                    </span>
-                  )}
-                  
-                  {isMe && (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                      Вы
-                    </span>
-                  )}
-                </div>
-                
-                <div className="text-sm text-gray-500 mt-0.5">
-                  {isOnline ? '🟢 В сети' : '⚪ Не в сети'}
-                </div>
-              </div>
-
-              {/* Кнопка кика */}
-              {canKick && onKick && (
-                <button
-                  onClick={() => onKick(player.id)}
-                  disabled={isKicking}
-                  className="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:bg-gray-100 disabled:text-gray-400 rounded transition"
-                >
-                  {isKicking ? 'Удаление...' : 'Кикнуть'}
-                </button>
-              )}
+            <div key={player.id} data-player-id={player.id} className={styles.playerItemWrap}>
+              <PlayerItem
+                player={player}
+                isMe={isMe}
+                isOnline={isOnline}
+                isHost={player.is_host}
+                canKick={canKick}
+                isKicking={isKicking}
+                onKick={onKick}
+                activeReaction={activeReaction}
+                isEliminated={isEliminated}
+                deathReason={deathReason}
+                listLayout={layout}
+              />
             </div>
           );
         })}
-      </div>
 
-      {/* Подсказка если мало игроков */}
-      {players.length < 3 && (
-        <p className="text-sm text-gray-500 text-center mt-4">
-          Минимум 3 игрока для старта игры
-        </p>
-      )}
+        {/* Рендерим заглушки */}
+        {Array.from({ length: placeholdersNeeded }).map((_, idx) => (
+          <div key={`placeholder-${idx}`} className={styles.placeholder}>
+            <div className={styles.placeholderCircle} />
+            {/* Текст показываем только в первой пустой ячейке, чтобы не дублировать */}
+            {idx === 0 && (
+              <p className={styles.hint}>
+                Минимум 3 игрока<br/>для старта
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

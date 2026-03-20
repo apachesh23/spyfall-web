@@ -1,0 +1,500 @@
+/* Game layout: тот же контейнер 1200×800 и стилистика glass, как в Room */
+
+.screenRoot {
+  width: 100%;
+  height: 100%;
+}
+
+.screenGrid {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+}
+
+.main {
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-left: 80px; /* 20px safe area + 60px кнопки */
+}
+
+.mainContent {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1270px) {
+  .main {
+    flex-direction: column;
+    overflow: auto;
+    padding-left: 0;
+  }
+
+  .mainContent {
+    overflow: hidden;
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 800px;
+  height: 100%;
+  min-height: 0;
+  margin: auto;
+  box-sizing: border-box;
+  font-family: var(--font-tektur), Tektur, monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: 80px 1fr 80px;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+@media (max-width: 1270px) {
+  .container {
+    height: 100%;
+    max-height: 100%;
+    overflow: auto;
+  }
+
+  .contentGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/* COL1 — узкая колонка */
+.leftCol {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+@media (max-width: 1270px) {
+  .leftCol {
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .leftCol {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+/* COL2 — широкая колонка */
+.rightCol {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+@media (max-width: 1270px) {
+  .rightCol {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/* ROW1 левая: карточка «Тема локации» */
+.glassBlock {
+  position: relative;
+  flex: 0 0 80px;
+  height: 80px;
+  padding: 12px 16px;
+  border-radius: 0.6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: clamp(14px, 2.5vw, 16px);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.glassBlockCard {
+  padding: 0;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+@media (max-width: 1270px) {
+  .glassBlock {
+    flex: 0 0 48px;
+    height: 48px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .glassBlockCard {
+    padding: 0;
+  }
+}
+
+/* Список игроков — как в Room */
+.playerListWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (max-width: 1270px) {
+  .playerListWrap {
+    flex: 0 0 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
+/* ROW3 левая: таймер */
+.timerWrap {
+  position: relative;
+  flex: 0 0 80px;
+  height: 80px;
+  border-radius: 0.6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+@media (max-width: 1270px) {
+  .timerWrap {
+    flex: 0 0 48px;
+    height: 48px;
+  }
+}
+
+/* ROW1 правая: две карточки ЛОКАЦИЯ + РОЛЬ (или один блок шпиона) */
+.modeCardsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 0 0 80px;
+  height: 80px;
+}
+
+@media (max-width: 1270px) {
+  .modeCardsRow {
+    flex: 0 0 60px;
+    height: 60px;
+    gap: 8px;
+  }
+}
+
+.modeCardsRowSingle {
+  grid-template-columns: 1fr;
+}
+
+.imagePlaceholderWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 0.6em;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* --- Мобильный layout GAME --- */
+
+@media (max-width: 1270px) {
+  .mobileRoot {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .mobileFixedTop {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .mobilePlayerListWrap {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 40vh;
+    overflow: auto;
+  }
+
+  .mobileScroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .mobileHeader {
+    height: 46px;
+    min-height: 46px;
+    border-radius: 0.6em;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-tektur), Tektur, monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+
+  .mobileHeaderTitle {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .mobilePlayersBlock {
+    flex: 0 0 auto;
+    min-height: 0;
+    border-radius: 0.6em;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .mobilePlayersInner {
+    max-height: 260px;
+    min-height: 140px;
+    overflow: auto;
+  }
+
+  .mobileModes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobileModeCard {
+    border-radius: 0.6em;
+    height: 60px;
+    min-height: 60px;
+    overflow: hidden;
+  }
+
+  .mobileModeCard :global([class*='card']) {
+    height: 100%;
+  }
+
+  .mobileSpyBlock {
+    border-radius: 0.6em;
+    overflow: hidden;
+  }
+
+  /* Блок картинки: на всю ширину, высота от пропорций картинки (масштаб по ширине) */
+  .mobileImageWrap {
+    flex: 0 0 auto;
+    width: 100%;
+    border-radius: 0.6em;
+    padding: 8px 6px 10px 6px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .mobileImageInner {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Масштабируем только по ширине, высота — из пропорций картинки (не растягиваем) */
+  .mobileImageInner :global([class*='container']) {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .mobileImageInner :global(img[alt='Location']),
+  .mobileImageInner :global(img[alt='Рамка']) {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .mobileEarlyVote {
+    flex: 0 0 auto;
+    min-height: 60px;
+    border-radius: 0.6em;
+    overflow: hidden;
+  }
+}
+
+/* ROW3 правая: досрочное голосование */
+.earlyVoteWrap {
+  flex: 0 0 auto;
+  min-height: 80px;
+  border-radius: 0.6em;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+@media (max-width: 1270px) {
+  .earlyVoteWrap {
+    min-height: 60px;
+  }
+}
+
+/* Кнопки ведущего: фикс слева */
+.hostButtonsWrap {
+  position: fixed;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hostButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.hostButton:hover {
+  transform: scale(1.05);
+}
+
+.hostButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hostButtonIcon {
+  width: 24px;
+  height: 24px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* --- Модалка панели ведущего (GAME) --- */
+.hostPanelBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.hostPanelCloseArea {
+  position: absolute;
+  inset: 0;
+}
+
+.hostPanelContent {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.hostPanelActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.hostPanelTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.hostPanelButton {
+  width: 100%;
+  min-height: 60px;
+  height: 60px;
+  box-sizing: border-box;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 0.3em;
+  border: none;
+  color: #fff;
+}
+
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #f7c431;
+  border-radius: 50%;
+  animation: gameSpin 0.8s linear infinite;
+}
+
+@keyframes gameSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

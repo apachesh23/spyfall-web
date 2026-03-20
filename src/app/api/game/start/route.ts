@@ -70,8 +70,11 @@ export async function POST(request: Request) {
       randomTheme = randomLocation.themes[Math.floor(Math.random() * randomLocation.themes.length)];
     }
 
-    // 5. Выбираем шпионов
-    const spyCount = Math.min(settings.spy_count || 1, Math.floor(players.length / 2));
+    // 5. Выбираем шпионов (при режиме «Шпионский хаос» — случайно от 1 до max)
+    const maxSpyCount = Math.min(settings.spy_count || 1, Math.floor(players.length / 2));
+    const spyCount = settings.mode_spy_chaos
+      ? 1 + Math.floor(Math.random() * maxSpyCount) // 1..maxSpyCount включительно
+      : maxSpyCount;
     const shuffled = [...players].sort(() => Math.random() - 0.5);
     const spyIds = shuffled.slice(0, spyCount).map(p => p.id);
 
@@ -99,7 +102,7 @@ export async function POST(request: Request) {
 
     console.log('Roles assigned');
 
-    // 7. Обновляем комнату - ОДНОЙ ТРАНЗАКЦИЕЙ
+    // 7. Создаём запись в games и обновляем комнату (status + current_game_id)
     const gameStartedAt = new Date();
     const durationMs = (settings.game_duration || 15) * 60 * 1000;
     const gameEndsAt = new Date(gameStartedAt.getTime() + durationMs);
@@ -109,15 +112,43 @@ export async function POST(request: Request) {
     console.log('  Duration:', settings.game_duration || 15, 'minutes');
     console.log('  Ends at:', gameEndsAt.toISOString());
 
+    const killUnlockAt = settings.mode_hidden_threat
+      ? new Date(gameStartedAt.getTime() + 3 * 60 * 1000).toISOString()
+      : null;
+
+    // TODO DEBUG: 10 сек для теста; вернуть 3 * 60 * 1000 для продакшена
+    const earlyVoteCooldownMs = 10 * 1000;
+    const earlyVoteAvailableAt = new Date(gameStartedAt.getTime() + earlyVoteCooldownMs).toISOString();
+
+    const { data: newGame, error: gameInsertError } = await supabase
+      .from('games')
+      .insert({
+        room_id: roomId,
+        location_id: randomLocation.id,
+        selected_theme: randomTheme,
+        spy_ids: spyIds,
+        started_at: gameStartedAt.toISOString(),
+        ends_at: gameEndsAt.toISOString(),
+        voting_status: 'none',
+        voting_round: 1,
+        phase: 'playing',
+        kill_unlock_at: killUnlockAt,
+        early_vote_used_count: 0,
+        early_vote_available_at: earlyVoteAvailableAt,
+      })
+      .select('id')
+      .single();
+
+    if (gameInsertError || !newGame) {
+      console.error('Game insert error:', gameInsertError);
+      throw gameInsertError || new Error('Failed to create game');
+    }
+
     const { error: updateError } = await supabase
       .from('rooms')
       .update({
         status: 'playing',
-        location_id: randomLocation.id,
-        selected_theme: randomTheme,
-        spy_ids: spyIds,
-        game_started_at: gameStartedAt.toISOString(),
-        game_ends_at: gameEndsAt.toISOString(),
+        current_game_id: newGame.id,
         updated_at: new Date().toISOString(),
       })
       .eq('id', roomId);
@@ -127,7 +158,7 @@ export async function POST(request: Request) {
       throw updateError;
     }
 
-    console.log('✅ Game started successfully');
+    console.log('✅ Game started successfully, gameId:', newGame.id);
 
     return NextResponse.json({ 
       success: true,

@@ -6,16 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:report": "eslint . -o eslint-report.txt"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.93.3",
+    "@tabler/icons-react": "^3.36.1",
+    "framer-motion": "^12.33.0",
+    "fuse.js": "^7.1.0",
+    "howler": "^2.2.4",
+    "lottie-react": "^2.4.1",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/howler": "^2.2.12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

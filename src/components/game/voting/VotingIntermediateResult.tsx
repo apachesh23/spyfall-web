@@ -1,4 +1,4 @@
-// src/components/game/voting/VotingIntermediateResult.tsx - ИСПРАВЛЕНО
+// Сплэш только для ничьей и «голосование не состоялось». Изгнание показывается через SplashScreen (voting_kicked_civilian).
 
 import { useState, useEffect } from 'react';
 import { PlayerAvatar } from '@/components/player/PlayerAvatar';
@@ -7,10 +7,7 @@ import type { GamePlayer } from '@/types';
 type VotingIntermediateResultProps = {
   isOpen: boolean;
   result: {
-    type: 'tie_revote' | 'tie_failed' | 'eliminated';
-    eliminatedId?: string;
-    wasSpy?: boolean;
-    candidates?: string[];
+    type: 'tie_revote' | 'tie_failed';
     voteCounts: Record<string, number>;
   };
   players: GamePlayer[];
@@ -48,11 +45,7 @@ export function VotingIntermediateResult({
 
   useEffect(() => {
     if (isOpen && countdown === 0) {
-      const timer = setTimeout(() => {
-        console.log('Closing intermediate result');
-        onClose();
-      }, 0);
-      
+      const timer = setTimeout(() => onClose(), 0);
       return () => clearTimeout(timer);
     }
   }, [countdown, isOpen, onClose]);
@@ -75,10 +68,6 @@ export function VotingIntermediateResult({
   } else if (result.type === 'tie_failed') {
     message = 'Голосование не состоялось. Игра продолжается';
     emoji = '🤝';
-  } else if (result.type === 'eliminated' && !result.wasSpy) {
-    const eliminated = players.find(p => p.id === result.eliminatedId);
-    message = `Исключён мирный житель: ${eliminated?.nickname}. Игра продолжается`;
-    emoji = '😔';
   }
 
   return (
@@ -107,7 +96,6 @@ export function VotingIntermediateResult({
           <h3>Голоса:</h3>
           {sortedVotes.map(({ player, votes }) => {
             if (!player) return null;
-            
             return (
               <div
                 key={player.id}
@@ -119,20 +107,14 @@ export function VotingIntermediateResult({
                   marginBottom: '8px',
                   background: '#f5f5f5',
                   borderRadius: '8px',
-                  border: player.id === result.eliminatedId ? '3px solid red' : 'none',
                 }}
               >
                 <span style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <PlayerAvatar avatarId={player.avatar_id} size="sm" />
                   {player.nickname}
                 </span>
-                <span style={{ 
-                  fontSize: '20px', 
-                  fontWeight: 'bold',
-                  color: player.id === result.eliminatedId ? 'red' : 'black'
-                }}>
+                <span style={{ fontSize: '20px', fontWeight: 'bold' }}>
                   {votes} {votes === 1 ? 'голос' : votes < 5 ? 'голоса' : 'голосов'}
-                  {player.id === result.eliminatedId && ' ☠️'}
                 </span>
               </div>
             );
@@ -149,7 +131,6 @@ export function VotingIntermediateResult({
         }}>
           <div style={{ fontSize: '48px', marginBottom: '15px' }}>{emoji}</div>
           <h3 style={{ margin: '0 0 20px 0', fontSize: '20px' }}>{message}</h3>
-          
           <div style={{
             fontSize: '48px',
             fontWeight: 'bold',

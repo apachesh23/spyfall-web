@@ -1,0 +1,161 @@
+/* Затемнённый фон (как в SpyEliminateModal) */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: radial-gradient(circle at 50% 0, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.95));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.closeArea {
+  position: absolute;
+  inset: 0;
+}
+
+/* Центральная панель — ширина как у модалки «Устранить» */
+.card {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100% - 32px);
+  padding: 18px 20px 16px;
+  box-sizing: border-box;
+  border-radius: 0.9em;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+/* Заголовок и подзаголовок — стиль как в SpyEliminateModal */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.inputWrap {
+  position: relative;
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* Инпут высотой 80px. 
+   Вся красота (glass) тянется из global-effects.css
+*/
+.input {
+  width: 100%;
+  height: 80px; 
+  padding: 0 24px;
+  border-radius: 0.6em;
+  outline: none;
+  border: none; /* Убираем стандартный бордер, чтобы сработал border из glass-input */
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 18px;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.inputError {
+  border-color: rgba(248, 113, 113, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(248, 113, 113, 0.85),
+    0 0 18px rgba(248, 113, 113, 0.7);
+  animation: spyGuessShake 0.22s ease-out;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes spyGuessShake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Переопределяем ширину PrimaryButtonLobby, чтобы обе кнопки ровно делили место */
+.btnGuessOverride {
+  min-width: 0 !important;
+  flex: 1;
+}
+
+/* Не показываем системный cursor: not-allowed для disabled-кнопки «Угадать» */
+.btnGuessOverride:disabled {
+  cursor: var(--cursor-spy-pointer, pointer);
+}
+
+@media (max-width: 1270px) {
+  .card {
+    width: min(480px, 100% - 24px);
+    padding: 14px 14px 12px;
+  }
+
+  .title {
+    font-size: 16px;
+    letter-spacing: 0.1em;
+  }
+
+  .hint {
+    font-size: 12px;
+  }
+}
+
+/* Кнопка отмены высотой 60px.
+   Визуальная часть полностью работает за счет .glass и .glass-hover из глобальных стилей.
+*/
+.btnCancel {
+  flex: 1;
+  min-width: 120px;
+  height: 60px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6em;
+  border: none; /* Сбрасываем, чтобы работал бордер из .glass */
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #fff;
+  /* Транзишены для физики нажатия */
+  transition: transform 0.1s ease-out, filter 0.1s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Анимация нажатия: кнопка слегка прожимается внутрь и немного темнеет */
+.btnCancel:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}

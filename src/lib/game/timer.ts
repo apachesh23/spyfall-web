@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
-export async function pauseGameTimer(roomId: string, channel: any) {
+export async function pauseGameTimer(roomId: string, channel: RealtimeChannel) {
   try {
     console.log('⏸️ Pausing game timer for room:', roomId);
 
@@ -45,7 +46,7 @@ export async function pauseGameTimer(roomId: string, channel: any) {
   }
 }
 
-export async function resumeGameTimer(roomId: string, channel: any) {
+export async function resumeGameTimer(roomId: string, channel: RealtimeChannel) {
   try {
     console.log('▶️ Resuming game timer for room:', roomId);
 

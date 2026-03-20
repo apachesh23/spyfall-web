@@ -1,0 +1,96 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.listScroll {
+  display: contents;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-tektur), Tektur, monospace;
+}
+
+@media (max-width: 1024px) {
+  .list[data-list-layout='lobby'] {
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .list[data-list-layout='lobby'] .listScroll {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    height: 130px;
+    min-height: 110px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
+    padding: 8px 0;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .list[data-list-layout='lobby'] .listScroll > * {
+    scroll-snap-align: start;
+  }
+
+  .list[data-list-layout='lobby'] .playerItemWrap {
+    flex-shrink: 0;
+  }
+
+  .list[data-list-layout='lobby'] .hint {
+    margin: 0;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 1270px) {
+  .list[data-list-layout='game'] {
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .list[data-list-layout='game'] .listScroll {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    height: 130px;
+    min-height: 110px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
+    padding: 8px 0;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .list[data-list-layout='game'] .listScroll > * {
+    scroll-snap-align: start;
+  }
+
+  .list[data-list-layout='game'] .playerItemWrap {
+    flex-shrink: 0;
+  }
+
+  .list[data-list-layout='game'] .hint {
+    margin: 0;
+    flex-shrink: 0;
+  }
+}

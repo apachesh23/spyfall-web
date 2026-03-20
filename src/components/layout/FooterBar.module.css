@@ -1,0 +1,181 @@
+.root {
+  width: 100%;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  height: clamp(80px, 15.625vw, 100px);
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .root[data-footer-variant='lobby'] {
+    display: flex;
+  }
+}
+
+@media (max-width: 1270px) {
+  .root[data-footer-variant='game'] {
+    display: flex;
+  }
+}
+
+.leftSlot,
+.centerSlot,
+.rightSlot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Обёртка для левой ячейки в игре (кнопка подсказки) — 60×60 как остальные кнопки футера */
+.leftSlotGame {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leftSlotGame > * {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leftSlotGame :global([class*='buttonSquare']) {
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  min-height: 60px !important;
+}
+
+.centerSlot {
+  flex: 1;
+  justify-content: stretch;
+  min-width: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.centerTextButton {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6em;
+  border: none;
+  padding: 0 16px;
+  cursor: var(--cursor-spy-pointer);
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #facc15;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.iconButton {
+  position: relative;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6em;
+  border: none;
+  padding: 0;
+  cursor: var(--cursor-spy-pointer);
+  overflow: hidden;
+}
+
+.icon {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #facc15;
+  pointer-events: none;
+}
+
+/* Overlay: затемнение + контент инвайта */
+.overlayBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Панель ведущего: сильнее затемнение фона */
+.overlayBackdropHost {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.overlayContent {
+  width: 100%;
+  max-width: 420px;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.overlayCloseArea {
+  position: absolute;
+  inset: 0;
+}
+
+/* Host panel overlay — клики по карточке не закрывают панель */
+.overlayContentHost {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.hostPanelActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.hostPanelBtn {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 60px !important;
+  height: 60px !important;
+  box-sizing: border-box;
+}
+
+.hostPanelList {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}

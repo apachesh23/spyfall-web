@@ -1,0 +1,292 @@
+.root {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: clamp(80px, 15.625vw, 100px);
+  flex-shrink: 0;
+}
+
+.soundWrap {
+  position: relative;
+  flex: 1; /* Позволяет левой части занимать пространство для центровки лого */
+  display: flex;
+  justify-content: flex-start;
+}
+
+.logoWrap {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.rightActions {
+  flex: 1; /* Позволяет правой части занимать пространство для центровки лого */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Прижимает кнопки к правому краю */
+  gap: 12px; /* Расстояние между Fullscreen и Меню */
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.iconButton {
+  position: relative;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6em;
+  border: none;
+  padding: 0;
+  cursor: var(--cursor-spy-pointer);
+  overflow: hidden;
+}
+
+.iconButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.icon {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #facc15;
+  pointer-events: none;
+}
+
+.iconLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuPopover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  z-index: 120;
+  min-width: 400px;
+  max-width: 400px;
+  padding: 12px 14px;
+  border-radius: 0.8em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menuPopover .menuSectionTitle {
+  margin-top: 14px;
+}
+
+.menuPopover .menuSectionTitle:first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  .menuPopover {
+    position: fixed;
+    left: max(20px, env(safe-area-inset-left));
+    right: max(20px, env(safe-area-inset-right));
+    top: 88px;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-top: 0;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    box-sizing: border-box;
+  }
+}
+
+/* Затемнение фона под поповерами на мобильных и планшетах (до 1024px) */
+.popoverBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 85;
+}
+
+@media (min-width: 1025px) {
+  .popoverBackdrop {
+    display: none;
+  }
+}
+
+.menuSectionTitle {
+  margin: 0 0 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.menuActiveHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.menuItemButton {
+  width: 100%;
+  height: 60px;
+  min-height: 60px;
+  padding: 0 14px;
+  border-radius: 0.6em;
+  border: none;
+  background: transparent;
+  color: rgba(248, 250, 252, 0.96);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  font-family: var(--font-tektur), Tektur, monospace;
+  cursor: var(--cursor-spy-pointer);
+}
+
+.menuItemButtonAccent {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  padding-left: 14px !important; 
+  padding-right: 14px !important;
+}
+
+.menuRoomCode {
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-left: 8px;
+  color: inherit;
+}
+
+.menuRoomStats {
+  margin-left: 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.menuRoomStatus {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.menuRoomStatusLobby {
+  color: #38bdf8; /* sky-400 */
+}
+
+.menuRoomStatusGame {
+  color: #4ade80; /* green-400 */
+}
+
+/* Язык: кастомный выпадающий список (60px, иконки из /language/), выпадает через портал */
+.menuLanguageWrap {
+  position: relative;
+  width: 100%;
+}
+
+.menuLanguageTrigger {
+  width: 100%;
+  height: 60px;
+  min-height: 60px;
+  padding: 0 14px;
+  border-radius: 0.6em;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  color: rgba(248, 250, 252, 0.96);
+  cursor: var(--cursor-spy-pointer);
+  text-align: left;
+}
+
+.menuLanguageIcon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.menuLanguageLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.menuLanguageChevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(248, 250, 252, 0.8);
+  transition: transform 0.2s ease;
+}
+
+.menuLanguageChevronOpen {
+  transform: rotate(180deg);
+}
+
+.menuLanguageDropdown {
+  padding: 6px;
+  border-radius: 0.6em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.menuLanguageDropdownPortal {
+  /* Позиция задаётся inline при рендере в портал */
+}
+
+.menuLanguageOption {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: 0.5em;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  color: rgba(248, 250, 252, 0.96);
+  cursor: var(--cursor-spy-pointer);
+  text-align: left;
+}
+
+.menuLanguageOptionIcon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.menuLanguageOptionActive {
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+}

@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
-import { pauseGameTimer } from '@/lib/game/timer';
+
+function computeGameTimeSec(startedAt: string | null, durationMin?: number | null) {
+  if (!startedAt || !durationMin || durationMin <= 0) return null;
+  const total = durationMin * 60;
+  let elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+  if (elapsed < 0) elapsed = 0;
+  if (elapsed > total) elapsed = total;
+  return elapsed;
+}
+
+const EARLY_VOTE_MAX_USES = 2;
+// TODO DEBUG: 10 сек для теста; вернуть 3 для продакшена (минуты)
+const EARLY_VOTE_COOLDOWN_SEC = 10;
 
 export async function POST(request: Request) {
   try {
@@ -26,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     const newState = !player.wants_early_vote;
-    
+
     await supabase
       .from('players')
       .update({ wants_early_vote: newState })
@@ -41,113 +53,161 @@ export async function POST(request: Request) {
       .eq('is_alive', true);
 
     const totalAlive = alivePlayers?.length || 0;
-    const wantsVote = alivePlayers?.filter(p => p.wants_early_vote).length || 0;
+    const wantsVote = alivePlayers?.filter((p) => p.wants_early_vote).length || 0;
 
     console.log(`Early vote progress: ${wantsVote}/${totalAlive}`);
 
-    const channel = supabase.channel(`game-${roomId}`);
-    await new Promise((resolve) => {
+    const channel = supabase.channel(`room-${roomId}`);
+    await new Promise<void>((resolve) => {
       channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') resolve(true);
+        if (status === 'SUBSCRIBED') resolve();
       });
     });
 
     await channel.send({
       type: 'broadcast',
       event: 'early_vote_updated',
-      payload: { 
+      payload: {
         playerId,
         wantsVote: newState,
         totalVotes: wantsVote,
-        totalPlayers: totalAlive
-      }
+        totalPlayers: totalAlive,
+      },
     });
 
+    // Большинство живых: 2 из 3, 3 из 4, 4 из 5 и т.д.
     const threshold = Math.ceil(totalAlive / 2);
-    const shouldStartVoting = wantsVote >= threshold;
-
-    console.log(`Threshold check: ${wantsVote} >= ${threshold} = ${shouldStartVoting}`);
+    let shouldStartVoting = wantsVote >= threshold;
 
     if (shouldStartVoting) {
-      console.log('🗳️ Starting voting! Threshold reached');
-      
-      try {
-        const { data: room } = await supabase
-          .from('rooms')
-          .select('settings')
-          .eq('id', roomId)
-          .single();
+      console.log(`Threshold check: ${wantsVote} >= ${threshold} = ${shouldStartVoting}`);
 
-        const voteDuration = room?.settings?.vote_duration || 1;
+      const { data: room } = await supabase
+      .from('rooms')
+      .select('current_game_id, settings')
+        .eq('id', roomId)
+        .single();
+
+      if (!room?.current_game_id) {
+        console.error('No active game for room');
+        await supabase.removeChannel(channel);
+        return NextResponse.json({ success: true, wantsVote: newState, votingStarted: false });
+      }
+
+      const { data: game } = await supabase
+        .from('games')
+        .select('id, ends_at, early_vote_used_count, early_vote_available_at, started_at')
+        .eq('id', room.current_game_id)
+        .single();
+
+      const now = new Date();
+      const usedCount = game?.early_vote_used_count ?? 0;
+      const availableAt =
+        game?.early_vote_available_at != null ? new Date(game.early_vote_available_at) : null;
+
+      if (usedCount >= EARLY_VOTE_MAX_USES) {
+        console.log('🚫 Early vote limit reached, not starting voting');
+        shouldStartVoting = false;
+      } else if (availableAt && now < availableAt) {
+        console.log(
+          '⏳ Early vote on cooldown until',
+          availableAt.toISOString(),
+          ' — current:',
+          now.toISOString(),
+        );
+        shouldStartVoting = false;
+      }
+
+      if (shouldStartVoting) {
+        console.log('🗳️ Starting early voting! Threshold and timing conditions met');
+
+        const voteDuration = room?.settings?.vote_duration ?? 1;
         const votingEndsAt = new Date(Date.now() + voteDuration * 60 * 1000);
+        const nowIso = now.toISOString();
 
-        console.log('Voting duration:', voteDuration, 'minutes');
-        console.log('Voting ends at:', votingEndsAt);
+        console.log('Voting duration:', voteDuration, 'min, ends at:', votingEndsAt.toISOString());
 
-        // Обновляем статус комнаты
-        const { error: updateError } = await supabase
-          .from('rooms')
+        const remainingMs =
+          game?.ends_at != null
+            ? Math.max(0, new Date(game.ends_at).getTime() - Date.now())
+            : 0;
+
+        const nextUsedCount = usedCount + 1;
+        const cooldownMs = EARLY_VOTE_COOLDOWN_SEC * 1000;
+        const nextAvailableAt =
+          nextUsedCount >= EARLY_VOTE_MAX_USES
+            ? null
+            : new Date(now.getTime() + cooldownMs).toISOString();
+
+        const { error: gameUpdateError } = await supabase
+          .from('games')
           .update({
+            phase: 'voting',
             voting_status: 'active',
-            voting_started_at: new Date().toISOString(),
-            voting_ends_at: votingEndsAt.toISOString()
+            voting_phase: 'collecting',
+            voting_type: 'early',
+            voting_started_at: nowIso,
+            voting_ends_at: votingEndsAt.toISOString(),
+            voting_result_ends_at: null,
+            paused_at: nowIso,
+            remaining_time_ms: remainingMs,
+            splash_event: null,
+            updated_at: nowIso,
+            early_vote_used_count: nextUsedCount,
+            early_vote_available_at: nextAvailableAt,
           })
-          .eq('id', roomId);
+          .eq('id', room.current_game_id);
 
-        if (updateError) {
-          console.error('Failed to update room:', updateError);
-          throw updateError;
+        if (gameUpdateError) {
+          console.error('Failed to update game for voting:', gameUpdateError);
+          await supabase.removeChannel(channel);
+          return NextResponse.json({ success: true, wantsVote: newState, votingStarted: false });
         }
 
-        console.log('Room status updated to voting');
+        // Логируем старт досрочного голосования с временем по игровому таймеру
+        if (game?.id) {
+          const gameTimeSec = computeGameTimeSec(
+            (game as { started_at?: string | null }).started_at ?? null,
+            room.settings?.game_duration ?? null,
+          );
+          await supabase
+            .from('game_events')
+            .insert({
+              game_id: game.id,
+              type: 'voting_started_early',
+              payload: {
+                room_id: roomId,
+                voting_type: 'early',
+                ends_at: votingEndsAt.toISOString(),
+                game_time_sec: gameTimeSec,
+              },
+            });
+        }
 
-        // Сбрасываем wants_early_vote у всех
         const { error: resetError } = await supabase
           .from('players')
           .update({ wants_early_vote: false })
           .eq('room_id', roomId);
 
-        if (resetError) {
-          console.error('Failed to reset wants_early_vote:', resetError);
-        }
+        if (resetError) console.error('Failed to reset wants_early_vote:', resetError);
 
-        console.log('Reset wants_early_vote for all players');
-
-        // Ставим таймер игры на паузу
-        console.log('Calling pauseGameTimer...');
-        try {
-          await pauseGameTimer(roomId, channel); // ← Передаём channel
-          console.log('✅ Game timer paused successfully');
-        } catch (pauseError) {
-          console.error('❌ Pause timer failed:', pauseError);
-        }
-
-        // Broadcast старт голосования
-        console.log('Broadcasting voting_started...');
         await channel.send({
           type: 'broadcast',
           event: 'voting_started',
-          payload: { 
-            endsAt: votingEndsAt.toISOString()
-          }
+          payload: { endsAt: votingEndsAt.toISOString() },
         });
 
-        console.log('✅ Voting started successfully!');
-
-      } catch (votingError) {
-        console.error('❌ Error starting voting:', votingError);
-        // Не возвращаем ошибку, чтобы toggle всё равно сработал
+        console.log('✅ Voting started successfully');
       }
     }
 
     await supabase.removeChannel(channel);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       wantsVote: newState,
-      votingStarted: shouldStartVoting
+      votingStarted: !!shouldStartVoting,
     });
-
   } catch (error) {
     console.error('❌ Early vote error:', error);
     return NextResponse.json({ error: 'Failed' }, { status: 500 });

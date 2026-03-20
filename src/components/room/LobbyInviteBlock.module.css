@@ -1,0 +1,266 @@
+/* LobbyInviteBlock.module.css */
+
+.root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  font-family: var(--font-tektur), monospace;
+}
+
+.desktopContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+/* --- BLOCKS SHARED --- */
+.block {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+/* --- DESKTOP SPECIFIC --- */
+.blockLeft {
+  border-radius: 12px 0 0 12px;
+  border-right: none !important;
+  z-index: 1; 
+}
+
+.blockRight {
+  border-radius: 0 12px 12px 0;
+  border-left: none !important;
+  z-index: 1;
+}
+
+.blockInner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* --- CONTENT --- */
+.rowActive {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  gap: 16px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-tektur), monospace;
+  transition: color 0.2s;
+}
+
+.labelInactive {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.labelActive {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* --- INPUT BOX --- */
+.inputBox {
+  flex: 1;
+  min-width: 0;
+  height: 60px !important; 
+  min-height: 60px !important;
+  border-radius: 0.6em;
+  overflow: hidden; 
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  box-sizing: border-box;
+  z-index: 10; 
+  flex-shrink: 0;
+}
+
+.inputTextContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 16px; 
+  font-weight: 700;
+  width: 100%;
+  pointer-events: none; 
+}
+
+.urlBase {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.urlCode {
+  color: #FFD700;
+}
+
+.inputBoxClickable {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.copyIcon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  opacity: 0.5;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 2;
+  transition: opacity 0.2s, color 0.2s;
+  pointer-events: none;
+}
+
+.inputBoxClickable:hover .copyIcon {
+  opacity: 0.85;
+}
+
+.copyIconSuccess {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #22c55e;
+  z-index: 2;
+  transition: color 0.2s;
+}
+
+
+/* --- OR BADGE --- */
+.orBadgeWrap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  margin-left: -20px; 
+  z-index: 20; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.vSeparator {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 0;
+}
+
+.orBadge {
+  position: relative;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  background: #1a1a1c; 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+}
+
+.orText {
+  font-size: 11px;
+  font-weight: 900;
+  color: #FFD700;
+  font-family: var(--font-tektur), monospace;
+}
+
+/* --- MOBILE --- */
+.mobileContainer {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; 
+  overflow: hidden;
+  position: relative;
+  padding: 0 20px; 
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  backdrop-filter: blur(12px);
+}
+
+.mobileBlockTop {
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 1;
+}
+
+.mobileBlockBottom {
+  border-radius: 0 0 12px 12px;
+  border-top: none; 
+  z-index: 1;
+}
+
+.mobileOrBadgeWrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40px;
+  margin-top: -20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mobileOrBadgeWrap::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 0;
+}
+
+.mobileContent {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px; 
+}
+
+/* --- ВАЖНО: Изменили брейкпоинт на 1024px --- */
+@media (max-width: 1024px) {
+  .inputTextContainer {
+    font-size: 13px !important; 
+  }
+}

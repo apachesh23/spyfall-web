@@ -1,13 +1,27 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 
+function computeGameTimeSec(startedAt: string | null, durationMin?: number | null) {
+  if (!startedAt || !durationMin || durationMin <= 0) return null;
+  const total = durationMin * 60;
+  let elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+  if (elapsed < 0) elapsed = 0;
+  if (elapsed > total) elapsed = total;
+  return elapsed;
+}
+
 export async function POST(request: Request) {
   try {
-    const { roomId, voterId, suspectId } = await request.json();
+    const { roomId, voterId, suspectId, skip } = await request.json();
 
-    if (!roomId || !voterId || !suspectId) {
+    if (!roomId || !voterId) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 });
     }
+    const isSkip = !!skip;
+    if (!isSkip && !suspectId) {
+      return NextResponse.json({ error: 'Missing suspectId or skip' }, { status: 400 });
+    }
+    const effectiveSuspectId = isSkip ? voterId : suspectId;
 
     // Проверяем что голосующий жив
     const { data: voter } = await supabase
@@ -20,37 +34,67 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Мёртвые не голосуют' }, { status: 403 });
     }
 
-    // Проверяем что комната в статусе голосования
+    // Проверяем что у комнаты есть активная игра и она в статусе голосования
     const { data: room } = await supabase
       .from('rooms')
-      .select('voting_status')
+      .select('current_game_id, settings')
       .eq('id', roomId)
       .single();
 
-    if (room?.voting_status !== 'active') {
+    if (!room?.current_game_id) {
+      return NextResponse.json({ error: 'Нет активной игры' }, { status: 400 });
+    }
+
+    const { data: game } = await supabase
+      .from('games')
+      .select('id, voting_status, started_at')
+      .eq('id', room.current_game_id)
+      .single();
+
+    if (game?.voting_status !== 'active') {
       return NextResponse.json({ error: 'Голосование неактивно' }, { status: 400 });
     }
 
-    // Сохраняем голос
+    // Сохраняем голос (при skip — suspect_id = voter_id, в finish не учитывается)
     const { error: voteError } = await supabase
       .from('votes')
       .upsert({
         room_id: roomId,
         voter_id: voterId,
-        suspect_id: suspectId,
+        suspect_id: effectiveSuspectId,
       }, {
         onConflict: 'room_id,voter_id'
       });
 
     if (voteError) throw voteError;
 
-    console.log(`Vote cast: ${voterId} → ${suspectId}`);
+    // Логируем событие голосования с временем по игровому таймеру
+    if (game?.id) {
+      const gameTimeSec = computeGameTimeSec(
+        (game as { started_at?: string | null }).started_at ?? null,
+        room.settings?.game_duration ?? null,
+      );
+      await supabase
+        .from('game_events')
+        .insert({
+          game_id: game.id,
+          type: 'vote_cast',
+          payload: {
+            room_id: roomId,
+            voter_id: voterId,
+            suspect_id: suspectId ?? null,
+            skip: isSkip,
+            game_time_sec: gameTimeSec,
+          },
+        });
+    }
 
-    // Broadcast что кто-то проголосовал
-    const channel = supabase.channel(`game-${roomId}`);
-    await new Promise((resolve) => {
+    console.log(`Vote cast: ${voterId} → ${isSkip ? 'skip' : suspectId}`);
+
+    const channel = supabase.channel(`room-${roomId}`);
+    await new Promise<void>((resolve) => {
       channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') resolve(true);
+        if (status === 'SUBSCRIBED') resolve();
       });
     });
 

@@ -1,0 +1,78 @@
+/* Красный вариант кнопки лобби: на всю колонку, высота 80px */
+.button {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  min-height: 80px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  font-weight: 400;
+
+  color: #fff;
+  background-color: #b91c1c;
+  border: 2px solid #dc2626;
+  border-radius: 0.6em;
+  box-shadow: 0 0 8px rgba(185, 28, 28, 0.5);
+  font-family: var(--font-tektur), Tektur, monospace;
+
+  transition:
+    transform 0.1s ease-out,
+    box-shadow 0.1s ease-out,
+    filter 0.1s ease-out;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.buttonCompact {
+  width: auto;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.buttonCompact .icon {
+  right: 0.5em;
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 1024px) {
+  /* На мобилке у компактной кнопки (ВЫХОД в плашке «Ожидание…») скрываем Lottie-иконку */
+  .buttonCompact .icon {
+    display: none;
+  }
+}
+
+/* Иконка справа от центра текста, показывается при hover */
+.icon {
+  position: absolute;
+  top: 50%;
+  right: 4.75em;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #fff;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

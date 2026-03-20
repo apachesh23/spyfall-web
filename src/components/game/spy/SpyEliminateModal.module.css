@@ -1,0 +1,151 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 0, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.95));
+  z-index: 1500;
+}
+
+.closeArea {
+  position: absolute;
+  inset: 0;
+}
+
+.card {
+  position: relative;
+  width: min(520px, 100% - 32px);
+  max-height: min(460px, 100% - 80px);
+  padding: 18px 20px 16px;
+  border-radius: 0.9em;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 0.6em;
+}
+
+.rowHovered {
+  background: rgba(255, 120, 120, 0.08);
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.nameHovered {
+  color: #ff9b9b;
+}
+
+.killBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeRow {
+  margin-top: 10px;
+}
+
+.closeBtn {
+  width: 100%;
+  height: 60px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.3em;
+  border: none;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: var(--cursor-spy-pointer, pointer);
+  transition: transform 0.1s ease-out, filter 0.1s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.closeBtn:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}
+
+@media (max-width: 1270px) {
+  .card {
+    width: min(480px, 100% - 24px);
+    padding: 14px 14px 12px;
+  }
+
+  .title {
+    font-size: 16px;
+    letter-spacing: 0.1em;
+  }
+
+  .hint {
+    font-size: 12px;
+  }
+}
+

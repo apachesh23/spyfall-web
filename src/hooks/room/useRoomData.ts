@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import type { Player, Settings } from '@/types';
+import { normalizeRoomSettings } from '@/lib/normalizeRoomSettings';
+import type { Player, Settings, SplashEventPayload, RoomStatus } from '@/types';
 
 export function useRoomData(code: string) {
   const router = useRouter();
@@ -20,16 +21,12 @@ export function useRoomData(code: string) {
     spy_count: 1,
     mode_roles: false,
     mode_theme: false,
-    mode_hidden_threat: false,
-    mode_shadow_alliance: false,
+    mode_multi_spy: false,
     mode_spy_chaos: false,
+    mode_hidden_threat: false,
   });
-
-  useEffect(() => {
-    const playerId = localStorage.getItem(`player_${code}`);
-    setCurrentPlayerId(playerId);
-    loadRoom();
-  }, [code]);
+  const [splashEvent, setSplashEvent] = useState<SplashEventPayload | null>(null);
+  const [roomStatus, setRoomStatus] = useState<RoomStatus | null>(null);
 
   async function loadRoom() {
     try {
@@ -37,7 +34,7 @@ export function useRoomData(code: string) {
 
       const { data: room, error: roomError } = await supabase
         .from('rooms')
-        .select('id, code, status, settings')
+        .select('id, code, status, settings, splash_event')
         .eq('code', code)
         .single();
 
@@ -48,15 +45,15 @@ export function useRoomData(code: string) {
       }
 
       setRoomId(room.id);
-      
+      setRoomStatus((room.status as RoomStatus) ?? null);
+      setSplashEvent(room.splash_event ?? null);
       if (room.settings) {
-        setSettings(room.settings);
+        setSettings(normalizeRoomSettings(room.settings));
       }
 
-      // КРИТИЧНО: явно указываем avatar_id!
       const { data: playersData, error: playersError } = await supabase
         .from('players')
-        .select('id, nickname, avatar_id, is_host, room_id, joined_at') // ← ИСПРАВЛЕНО!
+        .select('id, nickname, avatar_id, is_host, room_id, joined_at')
         .eq('room_id', room.id)
         .order('joined_at', { ascending: true });
 
@@ -105,6 +102,13 @@ export function useRoomData(code: string) {
     }
   }
 
+  useEffect(() => {
+    const playerId = localStorage.getItem(`player_${code}`);
+    setCurrentPlayerId(playerId);
+    loadRoom();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
   return {
     players,
     setPlayers,
@@ -115,5 +119,9 @@ export function useRoomData(code: string) {
     isHost,
     settings,
     setSettings,
+    splashEvent,
+    setSplashEvent,
+    roomStatus,
+    setRoomStatus,
   };
 }

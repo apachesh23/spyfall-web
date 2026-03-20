@@ -1,0 +1,293 @@
+/* Оверлей на весь экран */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+/* ——— Верхняя полоса: только Front layer ——— */
+.topStrip {
+  flex-shrink: 0;
+  height: 150px;
+  width: 100%;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topStripFront {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 150px;
+  margin-left: -60vmax;
+  margin-top: -120px;
+  transform-origin: center center;
+  background: var(--voting-front);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 15px;
+}
+
+.topStripContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.titleBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2em 0.55em;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: clamp(0.7rem, 1.4vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: white;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+.topStripText {
+  color: white;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: clamp(2rem, 3vw, 3rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transform: var(--top-strip-text-rotate);
+}
+
+@media (max-width: 1270px) {
+  .topStripText {
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    white-space: normal;
+    text-align: center;
+    /* при 1.6rem 16em = одна длинная строка; задаём в ch, чтобы перенос был по ширине */
+    max-width: 16ch;
+    line-height: 1.25;
+  }
+}
+
+/* ——— Центральная зона под контент голосования (safe-area сверху/снизу) ——— */
+.center {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 4vh, 24px) clamp(12px, 2vw, 20px);
+  overflow: hidden;
+}
+
+/* ——— Нижняя полоса: Back + Front слои ——— */
+.bottomStrip {
+  flex-shrink: 0;
+  height: 80px;
+  width: 100%;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottomBack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 80px;
+  margin-left: -60vmax;
+  margin-top: -40px;
+  transform-origin: center center;
+  background: var(--voting-back);
+}
+
+.bottomFront {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 80px;
+  margin-left: -60vmax;
+  margin-top: -40px;
+  transform-origin: center center;
+  background: var(--voting-front);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottomStripText {
+  color: white;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35em;
+  transform: var(--bottom-strip-text-rotate);
+}
+
+.bottomStripText.countdownRow {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35em;
+}
+
+.bottomStripLabel {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.countdownNumberWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.countdownNumber {
+  display: inline-block;
+  text-align: center;
+  transform-origin: center center;
+  font-weight: 600;
+}
+
+/* ——— Контент голосования: блок «список + кнопки» центрирован, список скроллится при нехватке места ——— */
+.votingCenter {
+  width: 100%;
+  max-width: 420px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px;
+  min-height: 0;
+}
+
+/* Список: высота по контенту; при ограничении родителя (max-height) сжимается и появляется скролл */
+.votingList {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 12px 4px 4px; /* справа отступ под скролл, чтобы не прилипал к карточкам */
+}
+
+/* Карточки не сжимаются — всегда полная высота, при нехватке места скролл */
+.votingList > * {
+  flex-shrink: 0;
+}
+
+.votingActions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.votingActions .skipBtn,
+.votingActions .voteBtn {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  padding: 0 16px;
+  border-radius: 0.6em;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.95);
+  transition: filter 0.15s;
+}
+
+.votingActions .voteBtn {
+  background: var(--accent-color, #f7c431);
+  color: #734517;
+  border: 2px solid #eee350;
+  box-shadow: 0 0 8px rgba(247, 196, 49, 0.4);
+}
+
+.votingActions .voteBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.votingActions .voteBtn:disabled,
+.votingActions .skipBtn:disabled {
+  opacity: 0.6;
+}
+
+.votingDone {
+  text-align: center;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 8px 0;
+}
+
+.votingSpectator {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+
+.votingNoResult {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  text-align: center;
+}
+
+.votingMostVotes {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+
+.votingResultOne,
+.votingResultTwo {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.votingResultTwo {
+  max-width: 420px;
+}

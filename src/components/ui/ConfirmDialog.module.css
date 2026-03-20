@@ -1,0 +1,89 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.closeArea {
+  position: absolute;
+  inset: 0;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px 24px;
+  box-sizing: border-box;
+  border-radius: 0.8em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  pointer-events: auto;
+}
+
+.question {
+  margin: 0;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btnYes {
+  width: auto !important;
+  min-width: 120px;
+  height: 56px !important;
+  min-height: 56px !important;
+  flex-shrink: 0;
+}
+
+.btnNo {
+  min-width: 120px;
+  height: 56px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6em;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: transparent;
+  cursor: var(--cursor-spy-pointer);
+  transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btnNo:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  filter: brightness(1.05);
+}
+
+.btnNo:active {
+  filter: brightness(0.95);
+}

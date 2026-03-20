@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import { isValidAvatarId, DEFAULT_AVATAR_ID } from '@/lib/avatars';
+import type { RoomStatus } from '@/types';
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +35,8 @@ export async function POST(request: Request) {
     }
 
     // 2. Проверяем статус
-    if (room.status !== 'waiting') {
+    const waiting: RoomStatus = 'waiting';
+    if (room.status !== waiting) {
       return NextResponse.json({ error: 'Игра уже началась' }, { status: 400 });
     }
 

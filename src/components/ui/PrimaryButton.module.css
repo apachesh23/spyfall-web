@@ -1,0 +1,140 @@
+.button {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    text-decoration: none;
+  
+    /* Соотношение ширина/высота, но высота не ниже минимума */
+    --btn-ratio: 7.5; /* 600/80 для контейнера 600px */
+    --btn-min-height: 60px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Добавляем отступ справа, чтобы длинный текст не наезжал на иконку */
+    padding-right: 3em;
+    padding-left: 1em; /* Для симметрии (опционально) */
+  
+    height: max(var(--btn-min-height), 100cqw / var(--btn-ratio));
+  
+    /* Шрифт */
+    font-size: clamp(12px, 100cqw / 24, 22px);
+    letter-spacing: 0.2em;
+    font-weight: 400;
+  
+    color: #734517;
+    background-color: #f7c431;
+    border: 2px solid #eee350;
+    border-radius: 0.3em;
+    box-shadow: 0 0 8px #f7c431;
+    font-family: var(--font-tektur), Tektur, monospace;
+  
+    transition:
+      transform 0.1s ease-out,
+      box-shadow 0.1s ease-out,
+      filter 0.1s ease-out;
+  }
+  
+  .button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .button[data-layout='auth'] {
+    --btn-ratio: 7.5;
+    --btn-min-height: 60px;
+  }
+
+  .button[data-layout='vote'] {
+    --btn-ratio: 5;
+    --btn-min-height: 56px;
+  }
+
+/* Лобби: фикс. размер, меньший текст */
+.buttonLobby {
+  min-width: 280px !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  font-size: 14px;
+}
+
+/* Крупная кнопка (Summary / спец. случаи): 80px на десктопе */
+.buttonSummary {
+  min-width: 280px !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  font-size: 15px;
+}
+
+@media (max-width: 960px) {
+  .buttonSummary {
+    height: 60px !important;
+    min-height: 60px !important;
+  }
+}
+
+.buttonLobby .icon {
+  right: 2.5em;
+  width: 32px;
+  height: 32px;
+}
+
+/* Кнопка без иконки — текст по центру */
+.buttonNoIcon {
+  padding-left: 1em !important;
+  padding-right: 1em !important;
+}
+.buttonNoIcon .icon {
+  display: none;
+}
+
+/* --- ОБНОВЛЕННЫЕ СТИЛИ ИКОНКИ --- */
+.icon {
+  position: absolute;
+  top: 50%;
+
+  /* Ближе к тексту */
+  right: 2.5em;
+
+  /* Десктоп: крупная иконка 40×40 */
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* LottieIcon обёртка */
+.icon > span {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 1270px) {
+  .buttonLobby .icon {
+    right: 4.5em;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -10,6 +19,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* UI-эффект: лёгкий shake при ошибке инпута */
+  --animate-input-shake: input-shake 0.4s ease-in-out;
+  @keyframes input-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +37,68 @@
   }
 }
 
+
+:root {
+  --cursor-spy: url('/cursors/arrow32.png') 1 1, auto;
+  --cursor-spy-pointer: url('/cursors/arrow32.png') 1 1, pointer;
+  --cursor-spy-text: url('/cursors/arrow32.png') 1 1, text;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  cursor: var(--cursor-spy);
+  user-select: none;
+  -webkit-user-select: none;
 }
+
+/* Кнопки и ссылки — свой курсор, не переключаем на системный */
+*,
+button,
+a,
+[role='button'],
+[type='submit'] {
+  cursor: var(--cursor-spy-pointer);
+}
+
+/* Инпуты — кастомный курсор, но поведение «текст» */
+input,
+textarea {
+  cursor: var(--cursor-spy-text);
+  user-select: text;
+  -webkit-user-select: text;
+}
+[contenteditable='true'] {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: var(--cursor-spy-text);
+}
+
+/* Виньетка для VideoBackground: десктоп — сильная, мобила — слабее */
+.vignette-overlay {
+  box-shadow: inset 0 0 25rem 14rem rgba(0, 0, 0, 0.95);
+}
+@media (max-width: 1024px) {
+  .vignette-overlay {
+    box-shadow: inset 0 0 12rem 7rem rgba(0, 0, 0, 0.88);
+  }
+}
+
+/* Лобби: на мобилке убираем нижний отступ, чтобы FooterBar прижимался к низу */
+@media (max-width: 1024px) {
+  .videoContentLobbyMobile {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Фон + виньетка на мобильных масштабируются — виньетка визуально меньше */
+.video-bg-layer {
+  transform-origin: center center;
+}
+@media (max-width: 1024px) {
+  .video-bg-layer {
+    transform: scale(1.2);
+  }
+}
+

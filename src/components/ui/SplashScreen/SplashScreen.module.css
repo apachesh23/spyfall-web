@@ -1,0 +1,331 @@
+/* Оверлей на весь экран */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.overlayClickable {
+  cursor: pointer;
+}
+
+.inner {
+  --splash-banner-height: 520px; /* высота bounding box повёрнутой конструкции */
+  --splash-banner-visual-bottom: 468px; /* 520 - 10%, визуальный низ баннера после translateY(-10%) */
+  --splash-button-gap: 50px;     /* отступ кнопки от нижнего края баннера (40–60px) */
+  --splash-lift: -10%;           /* сдвиг баннера вверх для оптического центрирования */
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Блок постоянной высоты: слот баннера (с учётом визуального сдвига -10%) + отступ + кнопка. */
+.splashContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* визуальный низ баннера = height - 10% = 468px; слот = 468 + gap = 518 + 60 кнопка */
+  min-height: calc(var(--splash-banner-visual-bottom) + var(--splash-button-gap) + 60px);
+}
+
+/* Слот под баннер: высота = визуальный низ баннера + отступ до кнопки, чтобы кнопка была ровно 50px под баннером */
+.bannerSlot {
+  height: calc(var(--splash-banner-visual-bottom) + var(--splash-button-gap));
+  width: 120vmax;
+  position: relative;
+  overflow: visible;
+}
+
+/* Контейнер баннера: габариты с учётом поворота, сдвиг вверх для оптического центрирования */
+.wrapper {
+  position: relative;
+  width: 120vmax;
+  height: var(--splash-banner-height);
+  transform: translateY(var(--splash-lift));
+  overflow: visible;
+}
+
+/* Задний слой (нижняя плашка). Цвет задаётся переменной --splash-back из конфига типа. */
+.backLayer {
+  position: absolute;
+  width: 120vmax;
+  height: 400px;
+  z-index: 1;
+  flex-shrink: 0;
+  transform-origin: center center;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2rem;
+  background: var(--splash-back);
+}
+
+.backLayerText {
+  color: white;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Сабтайтл + счётчик в одну строку */
+.backLayerText.countdownRow {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35em;
+}
+
+/* Контейнер цифр: фиксированная ширина, цифра выровнена по центру; цифры крупнее сабтайтла */
+.countdownNumberWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.countdownNumber {
+  display: inline-block;
+  text-align: center;
+  transform-origin: center center;
+}
+
+.countdownLabel {
+  display: block;
+}
+
+/* Слой-тень: копия передней плашки, тёмная + blur + смещение вниз — эффект падающей тени на задний слой */
+.frontLayerShadow {
+  position: absolute;
+  width: 120vmax;
+  height: 400px;
+  z-index: 2;
+  flex-shrink: 0;
+  transform-origin: center center;
+  background: rgba(0, 0, 0, 0.05);
+  /* filter: blur(10px); */
+  pointer-events: none;
+}
+
+/* Передний слой (верхняя плашка). Цвет задаётся переменной --splash-front из конфига типа. */
+.frontLayer {
+  position: absolute;
+  width: 120vmax;
+  height: 400px;
+  z-index: 3;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  background: var(--splash-front);
+  overflow: hidden;
+}
+
+/* Кровь под контентом внутри frontLayer (spy_kill), обрезается слоем */
+.frontLayerBloodWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  filter: blur(2px);
+}
+
+/* Контент победы — отдельный слой поверх баннера (не внутри), рисуется после вылета баннера */
+.victoryContentOverlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 120vmax;
+  height: var(--splash-banner-height);
+  transform: translateY(var(--splash-lift));
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.frontLayerContent {
+  text-align: center;
+  color: white;
+}
+
+.title {
+  font-size: clamp(2rem, 5vw, 5rem);
+  margin: 0;
+  font-family: var(--font-tektur), Tektur, monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-style: italic;
+}
+
+/* ——— Победный баннер: без наклона текста, своя структура ——— */
+.titleVictory {
+  font-size: clamp(1.5rem, 4vw, 3.5rem);
+  margin: 0;
+  font-family: var(--font-tektur), Tektur, monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* Тайтл «Был изгнан голосованием» в две строки, можно сделать крупнее на мобилке */
+.votingTitle {
+  line-height: 1.1;
+}
+
+.votingTitleDesktop {
+  display: inline;
+}
+
+.votingTitleMobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .votingTitle {
+    font-size: clamp(1.8rem, 6vw, 3.6rem);
+  }
+  .votingTitleDesktop {
+    display: none;
+  }
+  .votingTitleMobile {
+    display: inline-block;
+  }
+}
+
+.frontLayerContentVictory {
+  text-align: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: -50px;
+}
+
+/* Только для баннера убийства: дополнительный отступ снизу */
+.frontLayerContentVictory.spyKillBanner {
+  margin-bottom: -100px;
+}
+
+.victoryTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Аватар с ником: поднять выше — меняй значение (например -8px, -16px) */
+.victorySpyBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: -110px; /* чуть выше под шарик */
+}
+
+/* Обёртка под круглый аватар 80×80 */
+.victorySpyAvatarWrap {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.victorySpyAvatar {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  border-radius: 50%;
+}
+
+.victorySpyNickname {
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: normal;
+}
+
+.victorySpyLabel {
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-style: normal;
+}
+
+.votingVotePercent {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+}
+
+.victoryBottomLottieWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+  min-height: 180px; /* чтобы слот под Lottie/пустой блок был одинаковым и для побед, и для «выгнали» */
+}
+
+/* Конфетти поверх всего контента победы, один раз */
+.victoryConfettiOverlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 120vmax;
+  height: var(--splash-banner-height);
+  transform: translateY(var(--splash-lift));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Зона кнопки: сразу под слотом баннера (отступ уже заложен в высоту слота) */
+.continueWrap {
+  min-height: 60px;
+}
+
+/* Кнопка ведущего без иконки — только текст по центру */
+.continueWrap button {
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+}
+
+.continueWrap button > span {
+  display: none;
+}
+
+/* На мобильных и низких экранах убираем сдвиг вверх — баннер центрируется без смещения */
+@media (max-height: 700px), (max-width: 768px) {
+  .inner {
+    --splash-lift: 0;
+  }
+}

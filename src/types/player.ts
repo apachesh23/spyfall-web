@@ -15,6 +15,8 @@ export type GamePlayer = Player & {
   role?: string | null;
   is_alive?: boolean;
   wants_early_vote?: boolean;
+  /** Причина выхода: 'killed' — убит шпионом, 'voted' — изгнан голосованием */
+  death_reason?: string | null;
 };
 
 export type PlayerInput = {

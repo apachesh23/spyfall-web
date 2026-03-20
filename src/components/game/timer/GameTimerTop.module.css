@@ -1,0 +1,150 @@
+.root {
+  position: absolute;
+  top: 2.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.rootInline {
+  position: static;
+  transform: none;
+  top: auto;
+  left: auto;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.rootInline .time {
+  font-size: 32px;
+  --timer-stroke-width: 1px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+/* Внешняя обводка: толщина и цвет задаются переменными */
+.time {
+  --timer-stroke-width: 2px;
+  --timer-stroke-color: rgba(54, 5, 21, 0.5);
+  font-size: 54px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    calc(-1 * var(--timer-stroke-width)) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) 0 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    0 var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) 0 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 0 14px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(0, 0, 0, 0.9);
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.ok .time {
+  color: #9af59f;
+  text-shadow:
+    calc(-1 * var(--timer-stroke-width)) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) 0 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    0 var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) 0 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 0 12px rgba(62, 201, 93, 0.9),
+    0 0 32px rgba(39, 173, 72, 0.9),
+    0 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+.warn .time {
+  color: #ffd38a;
+  text-shadow:
+    calc(-1 * var(--timer-stroke-width)) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) 0 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    0 var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) 0 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 0 10px rgba(255, 179, 71, 0.9),
+    0 0 28px rgba(222, 128, 39, 0.95),
+    0 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+.danger .time {
+  color: #ff9b9b;
+  text-shadow:
+    calc(-1 * var(--timer-stroke-width)) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) 0 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    0 var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) 0 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 0 10px rgba(255, 99, 99, 0.95),
+    0 0 32px rgba(210, 25, 25, 0.95),
+    0 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+.paused .time {
+  color: #d0d0d0;
+  text-shadow:
+    calc(-1 * var(--timer-stroke-width)) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) 0 0 var(--timer-stroke-color),
+    calc(-1 * var(--timer-stroke-width)) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    0 var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) calc(-1 * var(--timer-stroke-width)) 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) 0 0 var(--timer-stroke-color),
+    var(--timer-stroke-width) var(--timer-stroke-width) 0 var(--timer-stroke-color),
+    0 0 8px rgba(160, 160, 160, 0.8),
+    0 0 20px rgba(80, 80, 80, 0.9),
+    0 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+@media (max-width: 1270px) {
+  .root {
+    top: 6%;
+    gap: 6px;
+    letter-spacing: 0.12em;
+  }
+
+  .rootInline {
+    gap: 4px;
+    letter-spacing: 0.1em;
+  }
+  .rootInline .time {
+    font-size: 24px;
+  }
+
+  .time {
+    font-size: 30px;
+    --timer-stroke-width: 1px;
+  }
+}
+

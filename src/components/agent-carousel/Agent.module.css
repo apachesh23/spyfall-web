@@ -1,0 +1,260 @@
+.agentCarouselRoot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Уменьшил gap до 4px для плотности.
+     Можно поставить 0, если нужно прямо впритык */
+  gap: 20px;
+  width: 100%;
+}
+
+.agentCarouselArcContainer {
+  position: relative;
+  width: 100%;
+  /* 600px соответствует STAGE_WIDTH в JS */
+  max-width: 600px;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.agentCarouselArcStage {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  transform-origin: top center;
+}
+
+.agentCarouselArcInner {
+  position: absolute;
+  left: 50%;
+  top: 0;
+}
+
+.agentCarouselItem {
+  position: absolute;
+  will-change: transform, filter; /* Добавили filter */
+  
+  /* Применяем CSS-переменную для размытия.
+     По умолчанию --motion-blur будет 0px. */
+  filter: blur(var(--motion-blur, 0px));
+
+  /* Добавляем плавность изменения фильтра, 
+     чтобы блюр не "прыгал" */
+  transition: filter 0.1s ease-out;
+}
+
+.agentDescriptionWrap {
+  position: relative;
+  width: 100%;
+}
+
+/* Обёртка кнопки */
+.agentDescriptionRandomButtonWrap {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 40px;
+  z-index: 20; /* Подняли Z-index, чтобы точно было кликабельно */
+  pointer-events: none;
+}
+
+.agentDescriptionRandomButtonWrap > * {
+  pointer-events: auto;
+}
+
+/* Кнопка RANDOM */
+.agentDescriptionRandomButton {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0.3em;
+  cursor: var(--cursor-spy-pointer);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-tektur), Tektur, monospace;
+  color: rgba(255, 255, 255, 0.95);
+  
+  /* Добавим фон для самой кнопки, чтобы она выделялась над стеклом */
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.agentDescriptionRandomButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Слот для буквы */
+.agentDescriptionSlotWrap {
+  display: inline-flex;
+  height: 36px;
+  width: 16px;
+  overflow: hidden;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+}
+
+.agentDescriptionSlotStrip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.agentDescriptionSlotCell {
+  flex-shrink: 0;
+  width: 24px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-tektur), Tektur, monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+/* --- ИСПРАВЛЕННАЯ СТЕКЛЯННАЯ КАРТОЧКА --- */
+.agentDescriptionCard {
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  height: clamp(140px, 16vh, 200px);
+  padding: 20px;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 0.6em;
+  overflow: hidden;
+
+  /* 1. Включаем GPU ускорение */
+  transform: translate3d(0, 0, 0); 
+  will-change: backdrop-filter;
+  z-index: 10;
+
+  /* 2. Исправленный фон и Blur */
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(255, 255, 255, 0.02)
+  );
+
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+
+  /* 3. Тени и Блики (исправлено "белое пятно") */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    /* Верхний блик */
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+    /* Нижний блик */
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.1),
+    /* Мягкое внутреннее свечение */
+    inset 0 0 30px 5px rgba(255, 255, 255, 0.05);
+}
+
+.agentDescriptionHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+}
+
+.agentDescriptionTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: clamp(12px, 5cqi, 20px);
+}
+
+.agentDescriptionTitle {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-tektur), Tektur, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agentDescriptionIcon {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+.agentDescriptionTextWrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  opacity: 0.8; /* Поднял opacity, было 0.3 (слишком темно) */
+}
+
+.agentDescriptionText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+/* Остальные классы без изменений */
+.agentArcRoot {
+  position: relative;
+  user-select: none;
+}
+
+.agentArcImageWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.agentArcImage {
+  display: block;
+  object-fit: cover;
+}
+
+.agentArcMask {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.agentGridButton {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 9999px;
+  overflow: hidden;
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: transparent;
+}
+
+.agentGridButtonSelected {
+  border-width: 4px;
+  border-color: #f7c431;
+}
+
+.agentGridImage {
+  object-fit: cover;
+}

@@ -1,0 +1,432 @@
+.card {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cardEliminated {
+  opacity: 0.6;
+}
+
+.cardEliminated .nickname {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.eliminatedLabel {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fca5a5;
+  font-family: var(--font-tektur), Tektur, monospace;
+  text-shadow:
+    0 0 10px rgba(252, 165, 165, 0.9),
+    0 0 20px rgba(252, 165, 165, 0.5);
+}
+
+.eliminatedLabelMobile {
+  display: none;
+}
+
+.eliminatedOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.avatarWrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.avatarImg {
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  min-height: 60px !important;
+}
+
+.reactionOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border-radius: 50%;
+  overflow: visible;
+  z-index: 3; /* всегда выше kill-оверлея */
+}
+
+.reactionOverlay > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  font-family: var(--font-tektur), Tektur, monospace;
+}
+
+.nameLabels {
+  display: contents;
+}
+
+.name .nickname { order: 2; }
+.name .hostIcon { order: 1; }
+.name .labelYou { order: 3; }
+
+/* На десктопе показываем ник полностью; обрезка с ellipsis только на мобилке (см. @media) */
+.nickname {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: visible;
+}
+
+.status {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-tektur), Tektur, monospace;
+}
+
+.statusOnline {
+  color: rgba(74, 222, 128, 0.95);
+}
+
+.statusOffline {
+  color: rgba(248, 113, 113, 0.95);
+}
+
+.statusDot {
+  position: absolute;
+  left: -2px;
+  bottom: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 23, 42, 0.7);
+  box-sizing: border-box;
+}
+
+.statusDotOnline {
+  background-color: rgba(74, 222, 128, 0.95);
+  box-shadow:
+    0 0 6px rgba(74, 222, 128, 0.8),
+    0 0 4px rgba(74, 222, 128, 0.4);
+}
+
+.statusDotOffline {
+  background-color: rgba(248, 113, 113, 0.95);
+  box-shadow:
+    0 0 6px rgba(248, 113, 113, 0.8),
+    0 0 4px rgba(248, 113, 113, 0.4);
+}
+
+.hostIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+/* Правая колонка: "Вы" и "Кикнуть" в одном контейнере, центрированы по одной оси */
+.rightSlot {
+  flex-shrink: 0;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.labelYou {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(96, 165, 250, 0.95);
+}
+
+.kickBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 0.4em;
+  font-family: var(--font-tektur), Tektur, monospace;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(248, 113, 113, 0.95);
+}
+
+.card:hover .nickname {
+  color: rgba(251, 191, 36, 0.95);
+}
+
+.kickBtn:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.kickBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Компакт: карточка колонкой (лобби ≤1024px, игра ≤1270px) --- */
+@media (max-width: 1024px) {
+  .card[data-list-layout='lobby'] {
+    position: relative;
+    height: auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    width: 80px;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .card[data-list-layout='lobby'] .avatarWrap {
+    position: relative;
+    flex-shrink: 0;
+    justify-content: center;
+  }
+
+  .card[data-list-layout='lobby'] .avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .card[data-list-layout='lobby'] .avatarImg {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    min-height: 60px !important;
+  }
+
+  .card[data-list-layout='lobby'] .statusDot {
+    width: 10px;
+    height: 10px;
+    left: -1px;
+    bottom: -1px;
+  }
+
+  .card[data-list-layout='lobby'] .rightSlot {
+    display: none;
+  }
+
+  .card[data-list-layout='lobby'] .rightSlotEliminated {
+    display: none !important;
+  }
+
+  .card[data-list-layout='lobby'] .info {
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+  }
+
+  .card[data-list-layout='lobby'] .name {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    font-size: 11px;
+    width: 100%;
+  }
+
+  .card[data-list-layout='lobby'] .nameLabels {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    margin-top: 1px;
+    min-height: 20px;
+  }
+
+  .card[data-list-layout='lobby'] .nickname {
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card[data-list-layout='lobby'] .hostIcon {
+    margin-bottom: 0;
+  }
+
+  .card[data-list-layout='lobby'] .labelYou {
+    font-size: 10px;
+  }
+
+  .card[data-list-layout='lobby'] .eliminatedLabelMobile {
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .card[data-list-layout='lobby'] .eliminatedLabelMobile .eliminatedLabel {
+    font-size: 10px;
+  }
+
+  .card[data-list-layout='lobby'] .name .nickname {
+    order: 0;
+  }
+
+  .card[data-list-layout='lobby'] .name .labelYou {
+    order: 1;
+  }
+
+  .card[data-list-layout='lobby'] .name .eliminatedLabelMobile {
+    order: 2;
+  }
+}
+
+@media (max-width: 1270px) {
+  .card[data-list-layout='game'] {
+    position: relative;
+    height: auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    width: 80px;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .card[data-list-layout='game'] .avatarWrap {
+    position: relative;
+    flex-shrink: 0;
+    justify-content: center;
+  }
+
+  .card[data-list-layout='game'] .avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .card[data-list-layout='game'] .avatarImg {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    min-height: 60px !important;
+  }
+
+  .card[data-list-layout='game'] .statusDot {
+    width: 10px;
+    height: 10px;
+    left: -1px;
+    bottom: -1px;
+  }
+
+  .card[data-list-layout='game'] .rightSlot {
+    display: none;
+  }
+
+  .card[data-list-layout='game'] .rightSlotEliminated {
+    display: none !important;
+  }
+
+  .card[data-list-layout='game'] .info {
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+  }
+
+  .card[data-list-layout='game'] .name {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    font-size: 11px;
+    width: 100%;
+  }
+
+  .card[data-list-layout='game'] .nameLabels {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    margin-top: 1px;
+    min-height: 20px;
+  }
+
+  .card[data-list-layout='game'] .nickname {
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card[data-list-layout='game'] .hostIcon {
+    margin-bottom: 0;
+  }
+
+  .card[data-list-layout='game'] .labelYou {
+    font-size: 10px;
+  }
+
+  .card[data-list-layout='game'] .eliminatedLabelMobile {
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .card[data-list-layout='game'] .eliminatedLabelMobile .eliminatedLabel {
+    font-size: 10px;
+  }
+
+  .card[data-list-layout='game'] .name .nickname {
+    order: 0;
+  }
+
+  .card[data-list-layout='game'] .name .labelYou {
+    order: 1;
+  }
+
+  .card[data-list-layout='game'] .name .eliminatedLabelMobile {
+    order: 2;
+  }
+}

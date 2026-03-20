@@ -1,0 +1,121 @@
+/**
+ * Глобальные UI-эффекты (glassmorphism и др.).
+ * Подключается в layout; классы можно вешать на любые элементы.
+ */
+
+/* --- Glassmorphism: база + верхняя и левая световые грани --- */
+.glass {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.02)
+  );
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 30px 5px rgba(255, 255, 255, 0.05);
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.glass::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5),
+    transparent,
+    rgba(255, 255, 255, 0.2)
+  );
+  pointer-events: none;
+}
+
+/* Hover только для кнопок: вешаем дополнительно к .glass, панели без этого класса не светлеют */
+.glass.glass-hover:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.06)
+  );
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Вариант для инпута: та же база + тёмная внутренняя тень (намек на «впадину») --- */
+.glass-input {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 40px 5px rgba(0, 0, 0, 0.1),
+    inset 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.glass-input::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.glass-input::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.4),
+    transparent,
+    rgba(255, 255, 255, 0.15)
+  );
+  pointer-events: none;
+}
+
+/* Вариант без бликов сверху/слева — для ошибок инпутов и особых случаев */
+.glass-input--no-glare::before,
+.glass-input--no-glare::after {
+  display: none;
+}

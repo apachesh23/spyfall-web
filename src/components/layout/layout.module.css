@@ -1,0 +1,139 @@
+/* VideoBackground */
+.videoRoot {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  height: 100dvh;
+}
+
+.videoLayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Тайловый фон для Game (вместо видео) */
+.tileLayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: url('/tile-bg.webp');
+  background-repeat: repeat;
+  background-size: 500px;
+}
+
+/* Затемнение поверх тайловой текстуры */
+.tileDarkOverlay {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(71, 9, 9, 0.3);
+}
+
+.videoEl {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Выносим видео на отдельный композитный слой — меньше лагов при отрисовке поверх overlay */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.videoOverlay {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.videoContent {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  /* Глобальный safe-area: по 20px слева/справа/снизу, сверху 0.
+     Верхний отступ задаётся верхним баром. */
+  padding: 0 20px 20px;
+  height: 100dvh;
+  box-sizing: border-box;
+}
+
+/* Logo — плавно от десктопного размера до мобильного */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15em;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  user-select: none;
+  font-family: var(--font-tektur), Tektur, monospace;
+  /* До ~640px держим десктопный размер, ниже плавно уменьшаем */
+  /* 7.1875vw = 46px при 640px ширины */
+  height: clamp(28px, 7.1875vw, 46px);
+  /* 6.09375vw = 39px при 640px ширины */
+  font-size: clamp(22px, 6.09375vw, 39px);
+}
+
+.logoDuck {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* утка масштабируется вместе с логотипом
+     7.96875vw = 51px при 640px ширины */
+  width: clamp(30px, 7.96875vw, 51px);
+  height: clamp(30px, 7.96875vw, 51px);
+}
+
+/* Подсказка «Поверните устройство» — только на мобиле в portrait */
+.rotateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* background: rgba(0, 0, 0, 0.85); */
+  pointer-events: none;
+}
+
+.rotateContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.rotateIcon {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.rotateText {
+  opacity: 0;
+  margin: 0;
+  padding: 0 24px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.95);
+  text-align: center;
+  font-family: var(--font-tektur), Tektur, monospace;
+}

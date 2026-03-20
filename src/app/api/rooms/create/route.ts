@@ -36,6 +36,18 @@ export async function POST(request: Request) {
     const roomCode = generateRoomCode();
     const hostId = crypto.randomUUID();
 
+    const initialSettings = {
+      spy_count: 1,
+      game_duration: 15,
+      vote_duration: 1,
+      mode_roles: false,
+      mode_theme: false,
+      mode_multi_spy: false,
+      mode_spy_chaos: false,
+      mode_hidden_threat: false,
+      max_players: 20,
+    };
+
     // 1. Создаём комнату
     const { data: room, error: roomError } = await supabase
       .from('rooms')
@@ -43,6 +55,7 @@ export async function POST(request: Request) {
         code: roomCode,
         host_id: hostId,
         status: 'waiting',
+        settings: initialSettings,
       })
       .select()
       .single();

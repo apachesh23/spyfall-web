@@ -3,6 +3,8 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { ReactionPayload } from '@/contexts/ReactionsContext';
 
 type UseGameRealtimeProps = {
   roomId: string | null;
@@ -12,10 +14,19 @@ type UseGameRealtimeProps = {
   onVotingStarted?: (endsAt: string) => void;
   onVoteCast?: (voterId: string) => void;
   onAllVotesCollected?: () => void;
-  onVotingFinished?: (data: { result: any }) => void;
-  onGameEnded?: (roomCode: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onVotingFinished?: (data: { result: any; phase?: string }) => void;
+  onVotingClosed?: () => void;
+  onVotingPhaseUpdated?: (payload: { phase: string }) => void;
+  onGameEnded?: (payload: { roomCode?: string; shareHash?: string }) => void;
   onGamePaused?: () => void;
   onGameResumed?: (endsAt: string) => void;
+  onSpyGuessStarted?: (payload: { autoWin: boolean; guessText: string; endsAt: string }) => void;
+  onSpyGuessVote?: (payload: { yesCount: number; noCount: number }) => void;
+  onSpyGuessFinished?: (payload: { accepted: boolean }) => void;
+  onSpyGuessAutoWinAcked?: () => void;
+  onSpyGuessAllVoted?: () => void;
+  onReaction?: (payload: ReactionPayload) => void;
 };
 
 export function useGameRealtime({
@@ -27,13 +38,20 @@ export function useGameRealtime({
   onVoteCast,
   onAllVotesCollected,
   onVotingFinished,
+  onVotingClosed,
+  onVotingPhaseUpdated,
   onGameEnded,
   onGamePaused,
   onGameResumed,
+  onSpyGuessStarted,
+  onSpyGuessVote,
+  onSpyGuessFinished,
+  onSpyGuessAutoWinAcked,
+  onSpyGuessAllVoted,
+  onReaction,
 }: UseGameRealtimeProps) {
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   
-  // НОВОЕ: Храним callbacks в refs чтобы не пересоздавать эффект
   const callbacksRef = useRef({
     onOnlinePlayersChange,
     onEarlyVoteUpdate,
@@ -41,12 +59,19 @@ export function useGameRealtime({
     onVoteCast,
     onAllVotesCollected,
     onVotingFinished,
+    onVotingClosed,
+    onVotingPhaseUpdated,
     onGameEnded,
     onGamePaused,
     onGameResumed,
+    onSpyGuessStarted,
+    onSpyGuessVote,
+    onSpyGuessFinished,
+    onSpyGuessAutoWinAcked,
+    onSpyGuessAllVoted,
+    onReaction,
   });
 
-  // Обновляем refs при изменении callbacks
   useEffect(() => {
     callbacksRef.current = {
       onOnlinePlayersChange,
@@ -55,9 +80,17 @@ export function useGameRealtime({
       onVoteCast,
       onAllVotesCollected,
       onVotingFinished,
+      onVotingClosed,
+      onVotingPhaseUpdated,
       onGameEnded,
       onGamePaused,
       onGameResumed,
+      onSpyGuessStarted,
+      onSpyGuessVote,
+      onSpyGuessFinished,
+      onSpyGuessAutoWinAcked,
+      onSpyGuessAllVoted,
+      onReaction,
     };
   });
 
@@ -76,7 +109,7 @@ export function useGameRealtime({
     console.log('🎮 Setting up game realtime for room:', roomId);
 
     const channel = supabase
-      .channel(`game-${roomId}`, {
+      .channel(`room-${roomId}`, {
         config: {
           presence: {
             key: playerId
@@ -131,10 +164,22 @@ export function useGameRealtime({
           callbacksRef.current.onVotingFinished(payload.payload);
         }
       })
+      .on('broadcast', { event: 'voting_closed' }, () => {
+        console.log('🚪 Voting closed');
+        if (callbacksRef.current.onVotingClosed) {
+          callbacksRef.current.onVotingClosed();
+        }
+      })
+      .on('broadcast', { event: 'voting_phase_updated' }, (payload) => {
+        console.log('🔄 Voting phase updated:', payload);
+        if (callbacksRef.current.onVotingPhaseUpdated) {
+          callbacksRef.current.onVotingPhaseUpdated(payload.payload);
+        }
+      })
       .on('broadcast', { event: 'game_ended' }, (payload) => {
         console.log('🏁 Game ended:', payload);
         if (callbacksRef.current.onGameEnded) {
-          callbacksRef.current.onGameEnded(payload.payload.roomCode);
+          callbacksRef.current.onGameEnded(payload.payload);
         }
       })
       .on('broadcast', { event: 'game_paused' }, () => {
@@ -147,6 +192,47 @@ export function useGameRealtime({
         console.log('▶️ Game resumed:', payload);
         if (callbacksRef.current.onGameResumed) {
           callbacksRef.current.onGameResumed(payload.payload.endsAt);
+        }
+      })
+      .on('broadcast', { event: 'spy_guess_started' }, (payload) => {
+        console.log('🕵️ Spy guess started:', payload);
+        if (callbacksRef.current.onSpyGuessStarted) {
+          const p = payload.payload;
+          callbacksRef.current.onSpyGuessStarted({
+            autoWin: p.autoWin,
+            guessText: p.guessText ?? '',
+            endsAt: p.endsAt ?? '',
+          });
+        }
+      })
+      .on('broadcast', { event: 'spy_guess_vote' }, (payload) => {
+        const p = payload.payload;
+        if (callbacksRef.current.onSpyGuessVote && p != null && typeof p.yesCount === 'number' && typeof p.noCount === 'number') {
+          callbacksRef.current.onSpyGuessVote({ yesCount: p.yesCount, noCount: p.noCount });
+        }
+      })
+      .on('broadcast', { event: 'spy_guess_finished' }, (payload) => {
+        console.log('🕵️ Spy guess finished:', payload);
+        if (callbacksRef.current.onSpyGuessFinished) {
+          callbacksRef.current.onSpyGuessFinished({ accepted: payload.payload?.accepted === true });
+        }
+      })
+      .on('broadcast', { event: 'spy_guess_auto_win_acked' }, () => {
+        console.log('🕵️ Spy guess auto-win acked');
+        if (callbacksRef.current.onSpyGuessAutoWinAcked) {
+          callbacksRef.current.onSpyGuessAutoWinAcked();
+        }
+      })
+      .on('broadcast', { event: 'spy_guess_all_voted' }, () => {
+        console.log('🕵️ Spy guess: all civilians voted');
+        if (callbacksRef.current.onSpyGuessAllVoted) {
+          callbacksRef.current.onSpyGuessAllVoted();
+        }
+      })
+      .on('broadcast', { event: 'reaction' }, (payload) => {
+        const p = payload.payload as ReactionPayload;
+        if (p?.playerId != null && p?.reactionId != null && callbacksRef.current.onReaction) {
+          callbacksRef.current.onReaction(p);
         }
       })
       .subscribe(async (status) => {
@@ -183,5 +269,19 @@ export function useGameRealtime({
     };
   }, [roomId, playerId]); // ВАЖНО: Только roomId и playerId в deps!
   
+  const sendReaction = useCallback(
+    (reactionId: number) => {
+      const ch = channelRef.current;
+      if (!ch || !playerId) return;
+      ch.send({
+        type: 'broadcast',
+        event: 'reaction',
+        payload: { playerId, reactionId },
+      });
+    },
+    [playerId]
+  );
+  
   // НЕ добавляем callbacks в dependencies - они в refs
+  return { sendReaction };
 }

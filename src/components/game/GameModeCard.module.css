@@ -1,0 +1,106 @@
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px; /* Чуть уменьшили отступ, чтобы дать больше места тексту */
+  padding: 12px 16px;
+  border-radius: 0.6em;
+  height: 80px;
+  overflow: hidden;
+}
+
+.card.cardFill {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
+}
+
+.card.cardEmpty {
+  opacity: 0.35;
+}
+
+@media (max-width: 1270px) {
+  .card {
+    height: 60px;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+}
+
+.lottieWrap {
+  flex-shrink: 0;
+  width: 40px; /* Уменьшили контейнер под новый размер иконки */
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+@media (max-width: 1270px) {
+  .lottieWrap {
+    width: 32px; /* Пропорционально уменьшаем на мобильных */
+    height: 32px;
+  }
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  text-align: left;
+  z-index: 1;
+}
+
+.line {
+  grid-area: stack;
+  margin: 0;
+  line-height: 1.2; /* Делаем межстрочный интервал чуть плотнее */
+  pointer-events: none;
+  overflow: hidden;
+  /* Убрали white-space: nowrap, чтобы текст мог переноситься */
+}
+
+.lineTitle {
+  font-size: 16px; /* Немного уменьшили с 18px для комфортного размещения 2 строк */
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Ограничиваем в 2 строки */
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal; /* Разрешаем перенос текста */
+}
+
+.label {
+  color: var(--accent-color, #f7c431);
+  letter-spacing: 0.04em;
+}
+
+.value {
+  color: rgba(255, 255, 255, 0.95);
+  word-break: break-word; /* Помогает переносить очень длинные слова */
+}
+
+.lineDesc {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+@media (max-width: 1270px) {
+  .lineTitle {
+    font-size: 13px; /* На мобильных тоже адаптируем */
+  }
+  .lineDesc {
+    font-size: 11px;
+  }
+}

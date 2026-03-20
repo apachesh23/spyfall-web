@@ -1,0 +1,82 @@
+.root {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inner {
+  position: relative;
+  border-radius: 0.6em;
+  overflow: hidden;
+}
+
+.innerError {
+  border-color: rgba(248, 113, 113, 0.95);
+  /* box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.95); */
+}
+
+/* Высота как у кнопки: те же ratio и мин. высота. Фон/граница — у обёртки .glass-input */
+.field {
+  width: 100%;
+
+  --input-ratio: 7.5; /* 600/80 как у кнопки */
+  --input-min-height: 60px;
+
+  height: max(var(--input-min-height), 100cqw / var(--input-ratio));
+
+  padding-left: 1.25em;
+  padding-right: 3.5em;
+  box-sizing: border-box;
+
+  font-size: clamp(14px, 100cqw / 24, 22px);
+  color: #ffffff;
+  border-radius: 0.6em;
+  font-weight: 400;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-tektur), Tektur, monospace;
+}
+
+.field::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* Варианты layout: ratio и мин. высота */
+.field[data-layout='auth'] {
+  --input-ratio: 7.5; /* 600/80 как кнопка */
+  --input-min-height: 60px;
+}
+
+.field[data-layout='lobby'] {
+  --input-ratio: 7.5;
+  --input-min-height: 60px;
+}
+
+.field[data-layout='code'] {
+  --input-ratio: 7.5;
+  --input-min-height: 60px;
+}
+
+.field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fieldError {
+  border-color: rgba(248, 113, 113, 0.9);
+}
+
+.counter {
+  position: absolute;
+  right: 1em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  font-family: var(--font-tektur), Tektur, monospace;
+}
+

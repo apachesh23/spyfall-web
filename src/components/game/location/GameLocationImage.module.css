@@ -1,0 +1,143 @@
+/* Контейнер обтягивает саму картинку-рамку и центрируется */
+.container {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  max-height: 100%;
+  /* Центрируем только по горизонтали, без вертикального отступа,
+     чтобы блок мог прижиматься к низу родительского контейнера */
+  margin: 0 auto;
+  perspective: 1000px;
+  /* Чтобы 3D элементы не растягивали страницу, когда они выходят за её пределы */
+  transform: translateZ(0);
+}
+
+/* Картинка-рамка масштабируется внутри сетки, сохраняя пропорции */
+.frameImage {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  position: relative;
+  z-index: 3; /* рамка всегда поверх содержимого и оверлеев */
+  pointer-events: none;
+}
+
+/* Контейнер-маска для наклоняющейся картинки */
+.tiltWrapper {
+  position: absolute;
+  top: var(--top, 10%);
+  left: var(--left, 5%);
+  width: var(--width, 90%);
+  height: var(--height, 80%);
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 4px;
+  /* Если у выреза есть скругление, можешь подогнать */
+  border: 2px solid red;
+  /* ТЕСТОВЫЙ БОРДЕР: УДАЛИ КАК НАСТРОИШЬ РАЗМЕР */
+  background-color: rgba(0, 0, 0, 0.5);
+  /* fallback background */
+  perspective: 1000px;
+  /* Чтобы 3D работало и внутри маски */
+}
+
+/* Внутренний контейнер, который теперь вращается внутри маски */
+.innerImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* transform-style у нас задается через framer-motion */
+}
+
+/* Сама картинка локации */
+.locationImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Слой для блика */
+.glareLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150%;
+  height: 150%;
+  pointer-events: none;
+  z-index: 10;
+  mix-blend-mode: overlay;
+  /* Делает блик более естественным */
+}
+
+/* Spy overlay — текстовый блок поверх картинки, но под рамкой */
+.spyOverlay {
+  position: absolute;
+  inset: 18% 0 8% 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.spyOverlayInner {
+  width: 750px;
+  padding: 18px 28px;
+  border-radius: 0.8em;
+  
+  /* Линейный градиент (полоска):
+     0% (крайне слева) - 10% непрозрачности
+     50% (центр) - 85% непрозрачности (достаточно темно)
+     100% (крайне справа) - 10% непрозрачности */
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(0, 0, 0, 0.75) 50%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  
+  /* Полностью убрали box-shadow, чтобы лишняя тень не ломала восприятие */
+  text-align: center;
+}
+
+.spyTitle {
+  margin: 0 0 4px;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ff9b9b;
+  text-shadow:
+    0 0 10px rgba(255, 99, 99, 0.9),
+    0 0 28px rgba(210, 25, 25, 0.9);
+}
+
+.spySubtitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: rgba(240, 240, 240, 0.85);
+}
+
+@media (max-width: 1270px) {
+  .spyOverlay {
+    inset: 12% 8% 22% 8%;
+  }
+
+  .spyOverlayInner {
+    padding: 10px 14px;
+  }
+
+  .spyTitle {
+    font-size: 20px;
+    letter-spacing: 0.16em;
+  }
+
+  .spySubtitle {
+    font-size: 13px;
+  }
+}
