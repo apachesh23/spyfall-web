@@ -68,9 +68,11 @@
   flex-direction: column;
   width: 100%;
   overflow: hidden;
-  /* Глобальный safe-area: по 20px слева/справа/снизу, сверху 0.
-     Верхний отступ задаётся верхним баром. */
-  padding: 0 20px 20px;
+  /* iOS PWA safe-area support: avoid notch overlap and bottom white gap */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: calc(20px + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(20px + env(safe-area-inset-left, 0px));
   height: 100dvh;
   box-sizing: border-box;
 }

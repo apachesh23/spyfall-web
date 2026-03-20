@@ -7,6 +7,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: #0a0a0a;
 }
 
 :root {
@@ -88,7 +89,7 @@ textarea {
 /* Лобби: на мобилке убираем нижний отступ, чтобы FooterBar прижимался к низу */
 @media (max-width: 1024px) {
   .videoContentLobbyMobile {
-    padding-bottom: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
   }
 }
 
