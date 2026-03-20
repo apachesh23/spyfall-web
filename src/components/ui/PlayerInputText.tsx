@@ -1,6 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useEffect } from 'react';
+import { motion, useAnimationControls } from 'framer-motion';
 import { playUI } from '@/lib/sound';
 import styles from './PlayerInputText.module.css';
 
@@ -31,20 +32,27 @@ export function PlayerInputText({
   className = '',
   layout = 'auth',
 }: PlayerInputTextProps) {
+  const controls = useAnimationControls();
+
+  useEffect(() => {
+    if (error) {
+      controls.start({
+        x: [0, -6, 6, -4, 4, -2, 2, 0],
+        transition: { duration: 0.4, ease: 'easeInOut' },
+      });
+      return;
+    }
+    controls.start({ x: 0, transition: { duration: 0.15, ease: 'easeInOut' } });
+  }, [error, _shakeTrigger, controls]);
+
   return (
     <div className={`${styles.root} ${className}`}>
       <motion.div
         className={`${styles.inner} glass-input ${error ? styles.innerError : ''} ${
           error ? 'glass-input--no-glare' : ''
         }`}
-        key={error ? _shakeTrigger : 'no-error'}
-        initial={false}
-        animate={
-          error
-            ? { x: [0, -6, 6, -4, 4, -2, 2, 0] }
-            : { x: 0 }
-        }
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        initial={{ x: 0 }}
+        animate={controls}
       >
         <input
           type="text"
