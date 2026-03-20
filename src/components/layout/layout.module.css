@@ -14,6 +14,18 @@
   left: 0;
 }
 
+/* iOS PWA: фон делаем fixed на весь экран (включая safe-area),
+   контентный слой остаётся в safe-area и не уезжает. */
+@media (display-mode: standalone) {
+  .videoLayer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+}
+
 /* Тайловый фон для Game (вместо видео) */
 .tileLayer {
   position: absolute;
